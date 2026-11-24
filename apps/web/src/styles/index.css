@@ -56,6 +56,9 @@
   /* 타이포그래피: 한글 Pretendard, 영문·숫자 Poppins (roundsquare.ai와 동일) */
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif;
   --font-display: Poppins, 'Pretendard Variable', Pretendard, sans-serif;
+  /* 고정폭 글꼴에는 한글이 없어 깨진다(▯). 한글만 Pretendard로 대체되게 뒤에 둔다. */
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, 'Pretendard Variable', Pretendard, monospace;
 }
 
 @layer base {

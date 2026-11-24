@@ -1,0 +1,182 @@
+/**
+ * 에이전트 루프: 관찰 → 제안 → 가드 → (사람의 결정) → 실행 → 기록
+ *
+ * 사람의 결정 없이 실행되는 경로는 없다. planAndGuard는 제안을 pending 또는 blocked로 저장할 뿐이다.
+ * 실행은 approve()에서만 일어나고, approve는 사람(reviewer)의 이름을 요구한다.
+ * MCP 서버에는 approve를 노출하지 않는다 (AI는 제안만 할 수 있고 승인할 수 없다).
+ */
+import type { SourceAdapter } from '../adapters/types.ts';
+import type { Db } from '../db/database.ts';
+import { runCollection, type RunOptions } from '../pipeline/run-collection.ts';
+import type { CollectQuery, Proposal } from '../schema.ts';
+import { verifyProposal } from './guard.ts';
+import { buildObservation } from './observation.ts';
+import type { Planner } from './planners.ts';
+import { getProposal, insertProposal, updateProposal } from './store.ts';
+
+/** 승인된 제안을 실제 수집으로 바꿀 때 어떤 어댑터를 쓸지. 데모와 실서비스가 다르다. */
+export type AdapterFactory = (adapterId: string, query: CollectQuery) => SourceAdapter;
+
+export class ReviewError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ReviewError';
+  }
+}
+
+/** 제안 하나를 가드에 통과시켜 저장한다. MCP 도구와 계획 사이클이 같은 함수를 쓴다. */
+export function submitProposal(db: Db, raw: unknown, proposedBy: string, now: Date = new Date()) {
+  const observation = buildObservation(db, now);
+  const result = verifyProposal(db, observation, raw, now);
+  if (!result.draft) return { proposal: null, checks: result.checks };
+  const proposal = insertProposal(db, result.draft, {
+    status: result.passed ? 'pending' : 'blocked',
+    checks: result.checks,
+    proposedBy,
+    now,
+  });
+  return { proposal, checks: result.checks };
+}
+
+export async function planAndGuard(db: Db, planner: Planner, now: Date = new Date()) {
+  const drafts = await planner.propose(buildObservation(db, now));
+  return drafts.map((raw) => submitProposal(db, raw, planner.id, now));
+}
+
+function requireReviewer(reviewer: string): string {
+  const name = reviewer.trim();
+  if (!name) throw new ReviewError('검토자 이름이 필요합니다');
+  return name;
+}
+
+function requirePending(proposal: Proposal): void {
+  if (proposal.status !== 'pending') {
+    throw new ReviewError(
+      `제안 #${proposal.id}은 ${proposal.status} 상태라 결정할 수 없습니다 (pending만 가능)`,
+    );
+  }
+}
+
+export function reject(
+  db: Db,
+  id: number,
+  input: { reviewer: string; note: string; now?: Date },
+): Proposal {
+  const proposal = getProposal(db, id);
+  requirePending(proposal);
+  if (!input.note.trim()) throw new ReviewError('거절 사유를 적어 주세요');
+  return updateProposal(db, id, {
+    status: 'rejected',
+    reviewer: requireReviewer(input.reviewer),
+    reviewNote: input.note.trim(),
+    reviewedAt: input.now ?? new Date(),
+  });
+}
+
+export function acknowledge(
+  db: Db,
+  id: number,
+  input: { reviewer: string; note?: string; now?: Date },
+): Proposal {
+  const proposal = getProposal(db, id);
+  requirePending(proposal);
+  if (proposal.kind !== 'operator_action')
+    throw new ReviewError('확인(acknowledge)은 운영 조치 제안에만 씁니다');
+  return updateProposal(db, id, {
+    status: 'acknowledged',
+    reviewer: requireReviewer(input.reviewer),
+    reviewNote: input.note?.trim() || null,
+    reviewedAt: input.now ?? new Date(),
+  });
+}
+
+/**
+ * 승인하고 실행한다.
+ * 승인 직전에 가드를 다시 돌린다. 제안이 만들어진 뒤 상황이 바뀌었을 수 있기 때문이다
+ * (그사이 같은 쿼리가 수집됐거나, 쿼터가 찼거나, 대상 실행이 이미 재실행됨).
+ */
+export async function approve(
+  db: Db,
+  id: number,
+  input: {
+    reviewer: string;
+    note?: string;
+    now?: Date;
+    adapterFor: AdapterFactory;
+    runOptions?: RunOptions;
+  },
+): Promise<Proposal> {
+  const proposal = getProposal(db, id);
+  requirePending(proposal);
+  if (proposal.kind === 'operator_action')
+    throw new ReviewError('운영 조치 제안은 실행할 것이 없습니다. 확인(acknowledge)을 쓰세요');
+  const reviewer = requireReviewer(input.reviewer);
+  const now = input.now ?? new Date();
+
+  // 자기 자신과의 중복 검사를 피하려고, 재검증 동안에는 잠시 검토 대기열에서 뺀다
+  db.prepare(`UPDATE agent_proposal SET status = 'blocked' WHERE id = ?`).run(id);
+  const recheck = verifyProposal(db, buildObservation(db, now), proposal, now);
+  if (!recheck.passed) {
+    return updateProposal(db, id, {
+      status: 'blocked',
+      checks: recheck.checks,
+      reviewer,
+      reviewedAt: now,
+      reviewNote: '승인 시점 재검증 실패',
+    });
+  }
+
+  updateProposal(db, id, {
+    status: 'approved',
+    reviewer,
+    reviewNote: input.note?.trim() || null,
+    reviewedAt: now,
+  });
+
+  const target = resolveTarget(db, proposal);
+  try {
+    const result = await runCollection(
+      db,
+      input.adapterFor(target.adapterId, target.query),
+      target.query,
+      {
+        ...input.runOptions,
+        now: () => now,
+      },
+    );
+    return updateProposal(db, id, {
+      status: result.status === 'failed' ? 'failed' : 'executed',
+      resultRunId: result.runId,
+    });
+  } catch (error) {
+    return updateProposal(db, id, {
+      status: 'failed',
+      reviewNote: `실행 오류: ${error instanceof Error ? error.message : String(error)}`,
+    });
+  }
+}
+
+function resolveTarget(db: Db, proposal: Proposal): { adapterId: string; query: CollectQuery } {
+  if (
+    proposal.kind === 'collect_query' &&
+    proposal.adapterId &&
+    proposal.queryKind &&
+    proposal.queryValue
+  ) {
+    return {
+      adapterId: proposal.adapterId,
+      query: { kind: proposal.queryKind, value: proposal.queryValue },
+    };
+  }
+  if (proposal.kind === 'retry_run' && proposal.runId !== null) {
+    const run = db
+      .prepare('SELECT adapter_id, query_kind, query_value FROM collection_run WHERE id = ?')
+      .get(proposal.runId) as {
+      adapter_id: string;
+      query_kind: CollectQuery['kind'];
+      query_value: string;
+    };
+    return { adapterId: run.adapter_id, query: { kind: run.query_kind, value: run.query_value } };
+  }
+  throw new ReviewError(`제안 #${proposal.id}의 실행 대상을 알 수 없습니다`);
+}

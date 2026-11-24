@@ -1,10 +1,11 @@
 /**
  * MCP 도구 정의 (이름, 설명, 입력 스키마).
+ * 조회 도구와 제안 도구만 있다. 승인·실행 도구는 일부러 두지 않는다 (사람의 확인을 거치게 하기 위해서).
  * mcp.ts가 이 정의로 도구를 등록하고, 웹의 "AI 에이전트 연결" 화면도 이 정의를 그대로 보여준다.
  * 그래서 문서와 실제 서버가 어긋나지 않는다. 이 파일은 DB나 Node API를 import하지 않는다.
  */
 import { z } from 'zod';
-import { platformSchema } from './schema.ts';
+import { platformSchema, proposalDraftSchema, proposalStatusSchema } from './schema.ts';
 
 export const toolDefinitions = {
   search_contents: {
@@ -47,6 +48,30 @@ export const toolDefinitions = {
     inputSchema: {
       limit: z.number().int().min(1).max(50).default(10),
       includeErrors: z.boolean().default(true),
+    },
+  },
+  observe: {
+    title: '관찰 사실 조회 (제안 전 필수)',
+    description:
+      '에이전트가 근거로 인용할 수 있는 사실 목록(factId와 SQL로 계산한 값)을 돌려준다. ' +
+      'propose_action의 evidence와 claims에는 여기 있는 factId와 값만 쓸 수 있다.',
+    inputSchema: {},
+  },
+  propose_action: {
+    title: '다음 행동 제안 (승인은 사람만)',
+    description:
+      '수집·재실행·운영 조치를 제안한다. 제안은 즉시 실행되지 않는다. ' +
+      '가드가 근거·수치·문장 속 숫자·실행 가능성·중복·쿼터를 검사하고, 통과하면 사람의 검토 대기열에 들어간다. ' +
+      '실패하면 blocked로 기록되고 실패한 검사와 이유를 돌려준다. 이 서버에는 승인 도구가 없다.',
+    inputSchema: proposalDraftSchema.shape,
+  },
+  list_proposals: {
+    title: '제안과 검토 결과 조회',
+    description:
+      '제안의 상태(blocked, pending, executed, rejected 등), 가드 검사 결과, 사람의 결정과 사유를 돌려준다.',
+    inputSchema: {
+      status: proposalStatusSchema.optional(),
+      limit: z.number().int().min(1).max(50).default(20),
     },
   },
 } as const;

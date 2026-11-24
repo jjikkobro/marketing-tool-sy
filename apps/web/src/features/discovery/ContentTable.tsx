@@ -18,9 +18,11 @@ function parsePlatformFilter(value: string): Platform | 'all' {
 interface ContentTableProps {
   contents: StoredContent[];
   hashtag: string | null;
+  /** 녹화 데이터면 URL이 실제로 존재하지 않으므로 링크를 걸지 않는다 */
+  recorded: boolean;
 }
 
-export function ContentTable({ contents, hashtag }: ContentTableProps) {
+export function ContentTable({ contents, hashtag, recorded }: ContentTableProps) {
   const [platform, setPlatform] = useState<Platform | 'all'>('all');
   const [keyword, setKeyword] = useState('');
 
@@ -81,7 +83,7 @@ export function ContentTable({ contents, hashtag }: ContentTableProps) {
               <th className="px-3 py-3 text-right font-medium">조회</th>
               <th className="px-3 py-3 text-right font-medium">좋아요</th>
               <th className="px-3 py-3 text-right font-medium">댓글</th>
-              <th className="px-6 py-3 font-medium whitespace-nowrap">게시</th>
+              <th className="w-28 px-6 py-3 font-medium">게시</th>
             </tr>
           </thead>
           <tbody>
@@ -90,7 +92,7 @@ export function ContentTable({ contents, hashtag }: ContentTableProps) {
                 key={`${content.platform}:${content.platformContentId}`}
                 className="border-t border-ink-100 align-top hover:bg-ink-50"
               >
-                <td className="max-w-xl px-6 py-3.5">
+                <td className="px-6 py-3.5">
                   <div className="flex items-center gap-1.5">
                     <Badge tone="neutral">{platformLabel[content.platform]}</Badge>
                     <Badge tone="muted">{sourceLabel[content.source]}</Badge>
@@ -101,22 +103,12 @@ export function ContentTable({ contents, hashtag }: ContentTableProps) {
                     )}
                   </div>
                   <p className="mt-1.5 line-clamp-2">{content.caption || '(캡션 없음)'}</p>
-                  {content.url && (
-                    <a
-                      href={content.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1 inline-flex items-center gap-1 text-xs text-ink-600 hover:text-brand-700"
-                    >
-                      원본 링크 <ExternalLink aria-hidden className="size-3" />
-                      <span className="sr-only">(새 창, 가상 데이터라 열리지 않을 수 있음)</span>
-                    </a>
-                  )}
+                  {content.url && <SourceLink url={content.url} recorded={recorded} />}
                 </td>
                 <MetricCell value={content.metrics.views} />
                 <MetricCell value={content.metrics.likes} />
                 <MetricCell value={content.metrics.comments} />
-                <td className="px-6 py-3.5 text-xs whitespace-nowrap text-ink-600 tabular-nums">
+                <td className="px-6 py-3.5 text-xs text-ink-600 tabular-nums">
                   {formatKst(content.publishedAt)}
                 </td>
               </tr>
@@ -141,5 +133,36 @@ function MetricCell({ value }: { value: number | null }) {
     >
       <span className={value === null ? 'text-ink-400' : undefined}>{formatNumber(value)}</span>
     </td>
+  );
+}
+
+/**
+ * 원본 링크. 녹화 데이터의 URL(가상 계정·가상 게시물)은 열어도 없는 페이지라,
+ * 클릭할 수 있게 두면 고장 난 것처럼 보인다. 그래서 링크 대신 "어떤 URL로 저장되는지"만 보여준다.
+ */
+function SourceLink({ url, recorded }: { url: string; recorded: boolean }) {
+  if (recorded) {
+    return (
+      <p
+        className="mt-1 flex max-w-md min-w-0 items-center gap-1.5 text-xs text-ink-500"
+        title="녹화된 가상 데이터라 실제 게시물이 없습니다. 실서비스 수집에서는 원본 링크로 열립니다."
+      >
+        <span className="shrink-0 rounded-full bg-ink-100 px-1.5 py-px text-[10px] font-semibold whitespace-nowrap text-ink-600">
+          가상 URL
+        </span>
+        <span className="min-w-0 truncate font-mono">{url.replace(/^https:\/\//, '')}</span>
+      </p>
+    );
+  }
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-1 inline-flex items-center gap-1 text-xs text-ink-600 hover:text-brand-700"
+    >
+      원본 링크 <ExternalLink aria-hidden className="size-3" />
+      <span className="sr-only">(새 창)</span>
+    </a>
   );
 }

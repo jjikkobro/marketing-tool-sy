@@ -136,10 +136,96 @@ export const hashtagStatSchema = z.object({
 });
 export type HashtagStat = z.infer<typeof hashtagStatSchema>;
 
-/** web이 읽는 정적 스냅샷 (collector export가 만든다). */
+/* ── 에이전트 제안 ─────────────────────────────────────────────── */
+
+/**
+ * 관찰 사실(fact). LLM이 근거로 인용할 수 있는 것은 이 목록에 있는 사실뿐이다.
+ * 값은 모두 SQL로 계산한 것이고, LLM은 factId로만 가리킨다.
+ */
+export const factSchema = z.object({
+  factId: z.string(),
+  description: z.string(),
+  values: z.record(z.string(), z.number()),
+});
+export type Fact = z.infer<typeof factSchema>;
+
+export const proposalKindSchema = z.enum(['collect_query', 'retry_run', 'operator_action']);
+export type ProposalKind = z.infer<typeof proposalKindSchema>;
+
+/** LLM(또는 MCP 클라이언트)이 내는 제안 초안. 아직 아무것도 검증되지 않은 상태다. */
+export const proposalDraftSchema = z.object({
+  kind: proposalKindSchema,
+  title: z.string().min(1).max(120),
+  rationale: z.string().min(1).max(600),
+  /** collect_query: 어떤 어댑터로 무엇을 수집할지 */
+  adapterId: z.string().nullable(),
+  queryKind: queryKindSchema.nullable(),
+  queryValue: z.string().nullable(),
+  /** retry_run: 다시 돌릴 실행 번호 */
+  runId: z.number().int().nullable(),
+  /** 근거로 인용한 사실 ID */
+  evidence: z.array(z.string()),
+  /** 근거에서 인용한 수치. 가드가 SQL 값과 하나씩 대조한다. */
+  claims: z.array(z.object({ factId: z.string(), field: z.string(), value: z.number() })),
+});
+export type ProposalDraft = z.infer<typeof proposalDraftSchema>;
+
+export const guardCheckSchema = z.object({
+  check: z.enum([
+    'schema',
+    'evidence',
+    'claims',
+    'grounded_numbers',
+    'capability',
+    'duplicate',
+    'quota',
+  ]),
+  passed: z.boolean(),
+  detail: z.string(),
+});
+export type GuardCheck = z.infer<typeof guardCheckSchema>;
+
+/**
+ * 제안 상태
+ * - blocked: 가드(결정적 검증)를 통과하지 못함. 사람에게 승인 요청 자체가 가지 않는다
+ * - pending: 가드 통과, 사람의 판단을 기다림
+ * - approved → executed | failed: 사람이 승인해 실행함
+ * - rejected: 사람이 거절함
+ * - acknowledged: 실행할 수 없는 운영 조치(operator_action)를 사람이 확인함
+ */
+export const proposalStatusSchema = z.enum([
+  'blocked',
+  'pending',
+  'approved',
+  'executed',
+  'failed',
+  'rejected',
+  'acknowledged',
+]);
+export type ProposalStatus = z.infer<typeof proposalStatusSchema>;
+
+export const proposalSchema = proposalDraftSchema.extend({
+  id: z.number().int(),
+  status: proposalStatusSchema,
+  proposedBy: z.string(),
+  createdAt: z.iso.datetime(),
+  checks: z.array(guardCheckSchema),
+  reviewer: z.string().nullable(),
+  reviewNote: z.string().nullable(),
+  reviewedAt: z.iso.datetime().nullable(),
+  resultRunId: z.number().int().nullable(),
+});
+export type Proposal = z.infer<typeof proposalSchema>;
+
+/** web이 읽는 데이터 (collector export 또는 serve가 만든다). */
 export const snapshotSchema = z.object({
   generatedAt: z.iso.datetime(),
   scenario: z.string(),
+  /**
+   * recorded: 녹화 응답으로 돌린 데모라 URL이 실제로 열리지 않는다. 화면은 링크를 걸지 않는다.
+   * live: 실서비스에서 수집한 데이터.
+   */
+  dataMode: z.enum(['recorded', 'live']),
   runs: z.array(collectionRunSchema),
   errors: z.array(collectionErrorSchema),
   health: z.array(adapterHealthSchema),
@@ -147,5 +233,6 @@ export const snapshotSchema = z.object({
   hashtags: z.array(hashtagStatSchema),
   /** 상위 해시태그별 관련 해시태그 (queries/relatedHashtags 결과). 웹에서 다시 계산하지 않는다. */
   related: z.record(z.string(), z.array(hashtagStatSchema)),
+  proposals: z.array(proposalSchema),
 });
 export type Snapshot = z.infer<typeof snapshotSchema>;

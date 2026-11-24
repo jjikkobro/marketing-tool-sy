@@ -15,7 +15,9 @@
     "export": "tsx src/cli.ts export --out ../web/public/data",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint --deny-warnings src test"
+    "lint": "oxlint --deny-warnings src test",
+    "serve": "tsx src/serve.ts",
+    "agent": "tsx src/cli.ts agent"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
@@ -27,6 +29,7 @@
     "vitest": "^5.1.1"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.13.0",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "better-sqlite3": "^13.2.0",
     "zod": "^4.6.7"

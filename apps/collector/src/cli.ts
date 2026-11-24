@@ -5,6 +5,12 @@
  *   runs | health | errors [--run <id>]               실행 기록 조회
  *   search <text> | related <hashtag>                 수집한 콘텐츠 조회, 관련 해시태그로 탐색 범위 넓히기
  *   export --out <dir>                                웹 화면용 스냅샷(JSON) 생성
+ *
+ *   agent plan [--planner recorded|claude]            관찰 → LLM 제안 → 가드 검증 → 검토 대기열에 저장
+ *   agent list                                        제안과 검증 결과 보기
+ *   agent approve <id> --reviewer <이름> [--note]     사람이 승인 → 승인 시점 재검증 → 실행
+ *   agent reject <id> --reviewer <이름> --note <사유> 사람이 거절
+ *   agent ack <id> --reviewer <이름>                  운영 조치 제안 확인
  */
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -18,9 +24,15 @@ import {
   listRuns,
   relatedHashtags,
   searchContents,
-  topHashtags,
 } from './queries/index.ts';
-import { snapshotSchema, type CollectionRun, type Snapshot } from './schema.ts';
+import type { CollectionRun, Proposal } from './schema.ts';
+import { buildSnapshot } from './snapshot.ts';
+import { adapterFactoryFromEnv } from './agent/adapters-from-env.ts';
+import { claudePlanner, recordedPlanner } from './agent/planners.ts';
+import { acknowledge, approve, planAndGuard, reject } from './agent/review.ts';
+import { listProposals } from './agent/store.ts';
+import { runAgentDemo } from './demo/agent-demo.ts';
+import { userInfo } from 'node:os';
 
 export const DEFAULT_DB = resolve(import.meta.dirname, '../.data/collector.db');
 
@@ -83,22 +95,76 @@ function printHealth(db: Db) {
   );
 }
 
-export function buildSnapshot(db: Db, scenario: string): Snapshot {
-  const hashtags = topHashtags(db, { limit: 30 });
-  return snapshotSchema.parse({
-    generatedAt: new Date().toISOString(),
-    scenario,
-    runs: listRuns(db, { limit: 100 }),
-    errors: listErrors(db, { limit: 500 }),
-    health: adapterHealth(db),
-    contents: searchContents(db, { limit: 500 }),
-    hashtags,
-    related: Object.fromEntries(
-      hashtags
-        .slice(0, 12)
-        .map((tag) => [tag.hashtag, relatedHashtags(db, tag.hashtag, { limit: 8 })]),
-    ),
-  });
+const PROPOSAL_STATUS: Record<Proposal['status'], string> = {
+  blocked: '차단(가드)',
+  pending: '검토 대기',
+  approved: '승인됨',
+  executed: '실행 완료',
+  failed: '실행 실패',
+  rejected: '거절',
+  acknowledged: '확인',
+};
+
+function printProposals(proposals: Proposal[]) {
+  if (proposals.length === 0) return console.log('제안이 없습니다.');
+  console.log(
+    renderTable(proposals, [
+      { header: '#', value: (p) => p.id, align: 'right' },
+      { header: '상태', value: (p) => PROPOSAL_STATUS[p.status] },
+      { header: '종류', value: (p) => p.kind },
+      { header: '제목', value: (p) => p.title.slice(0, 34) },
+      {
+        header: '가드',
+        value: (p) =>
+          p.checks
+            .filter((c) => !c.passed)
+            .map((c) => `✗ ${c.check}`)
+            .join(' ') || '✓ 7/7',
+      },
+    ]),
+  );
+  for (const p of proposals.filter((p) => p.status === 'blocked')) {
+    console.log(`\n  #${p.id} 차단 사유`);
+    for (const c of p.checks.filter((c) => !c.passed)) console.log(`    - ${c.check}: ${c.detail}`);
+  }
+}
+
+async function runAgentCommand(
+  db: Db,
+  [sub, idText]: string[],
+  values: { planner?: string; reviewer?: string; note?: string },
+) {
+  const reviewer = values.reviewer ?? userInfo().username;
+  const id = Number(idText);
+
+  switch (sub) {
+    case 'plan': {
+      const planner = values.planner === 'claude' ? claudePlanner() : recordedPlanner();
+      console.log(`계획자: ${planner.id}`);
+      await planAndGuard(db, planner);
+      return printProposals(listProposals(db, { limit: 20 }).reverse());
+    }
+    case 'list':
+      return printProposals(listProposals(db).reverse());
+    case 'approve': {
+      const { mode, adapterFor } = adapterFactoryFromEnv();
+      if (mode === 'recorded') console.log('실서비스 토큰이 없어 녹화 응답으로 실행합니다.');
+      const result = await approve(db, id, { reviewer, note: values.note, adapterFor });
+      console.log(
+        `제안 #${id}: ${PROPOSAL_STATUS[result.status]}${result.resultRunId ? ` → 실행 #${result.resultRunId}` : ''}`,
+      );
+      if (result.status === 'blocked') printProposals([result]);
+      return;
+    }
+    case 'reject':
+      reject(db, id, { reviewer, note: values.note ?? '' });
+      return console.log(`제안 #${id}: 거절`);
+    case 'ack':
+      acknowledge(db, id, { reviewer, note: values.note });
+      return console.log(`제안 #${id}: 확인`);
+    default:
+      console.log('사용법: agent plan|list|approve|reject|ack');
+  }
 }
 
 async function main(argv: string[]) {
@@ -110,6 +176,9 @@ async function main(argv: string[]) {
       scenario: { type: 'string', default: 'normal' },
       run: { type: 'string' },
       out: { type: 'string' },
+      planner: { type: 'string', default: 'recorded' },
+      reviewer: { type: 'string' },
+      note: { type: 'string' },
     },
   });
   const [command = 'help', ...rest] = positionals;
@@ -127,6 +196,11 @@ async function main(argv: string[]) {
       onStep: (step, result) =>
         console.log(`  #${result.runId} ${STATUS_LABEL[result.status].padEnd(5)} ${step.label}`),
     });
+    if (scenario === 'agent') {
+      await runAgentDemo(db);
+      console.log('\n■ 에이전트 제안 (녹화된 계획 응답 → 가드 → 검토 대기)\n');
+      printProposals(listProposals(db).reverse());
+    }
     console.log('\n■ 실행 기록\n');
     printRuns(db);
     console.log('\n■ 오류·경고\n');
@@ -171,12 +245,14 @@ async function main(argv: string[]) {
       mkdirSync(out, { recursive: true });
       writeFileSync(
         join(out, 'snapshot.json'),
-        `${JSON.stringify(buildSnapshot(db, values.scenario), null, 2)}\n`,
+        `${JSON.stringify(buildSnapshot(db, { scenario: values.scenario, dataMode: 'recorded' }), null, 2)}\n`,
       );
       return console.log(`스냅샷 저장: ${join(out, 'snapshot.json')}`);
     }
+    case 'agent':
+      return runAgentCommand(db, rest, values);
     default:
-      console.log('명령: demo | runs | errors | health | search | related | export');
+      console.log('명령: demo | runs | errors | health | search | related | export | agent');
   }
 }
 

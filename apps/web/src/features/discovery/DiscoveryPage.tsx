@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/ui/PageHeader';
 import { ErrorMessage, LoadingBlock } from '../../components/ui/StateMessage';
 import { ContentTable } from './ContentTable';
 import { HashtagPanel } from './HashtagPanel';
+import { ImpactPanel } from './ImpactPanel';
 import { RunSummaryStrip } from './RunSummaryStrip';
 
 export function DiscoveryPage() {
@@ -21,8 +22,8 @@ export function DiscoveryPage() {
         actions={
           snapshot.data && (
             <SnapshotBadge
-              generatedAt={snapshot.data.generatedAt}
-              scenario={snapshot.data.scenario}
+              generatedAt={snapshot.data.snapshot.generatedAt}
+              scenario={snapshot.data.snapshot.scenario}
             />
           )
         }
@@ -34,15 +35,23 @@ export function DiscoveryPage() {
         <ErrorMessage error={snapshot.error} />
       ) : (
         <>
-          <RunSummaryStrip runs={snapshot.data.runs} errors={snapshot.data.errors} />
-          <div className="grid items-start gap-6 lg:grid-cols-[18rem_1fr]">
+          <ImpactPanel snapshot={snapshot.data.snapshot} />
+          <RunSummaryStrip
+            runs={snapshot.data.snapshot.runs}
+            errors={snapshot.data.snapshot.errors}
+          />
+          <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
             <HashtagPanel
-              hashtags={snapshot.data.hashtags}
-              related={snapshot.data.related}
+              hashtags={snapshot.data.snapshot.hashtags}
+              related={snapshot.data.snapshot.related}
               selected={hashtag}
               onSelect={setHashtag}
             />
-            <ContentTable contents={snapshot.data.contents} hashtag={hashtag} />
+            <ContentTable
+              contents={snapshot.data.snapshot.contents}
+              hashtag={hashtag}
+              recorded={snapshot.data.snapshot.dataMode === 'recorded'}
+            />
           </div>
         </>
       )}

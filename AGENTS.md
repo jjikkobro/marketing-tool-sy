@@ -15,6 +15,8 @@
 - 삼양라운드스퀘어 CI 심볼과 로고는 쓰지 않는다. 컬러와 서체만 따른다.
 - 실제 SNS를 스크래핑하지 않는다. 브라우저 자동화는 `apps/collector/fixtures/mock-feed/`만 대상으로 한다.
 - 실제로 실행해 보지 않은 코드를 "동작한다"고 문서에 쓰지 않는다.
+- **사람의 승인 없이 수집을 실행하는 경로를 만들지 않는다.** MCP에 승인·실행 도구를 추가하지 않는다. LLM이 만든 숫자를 검증 없이 화면이나 실행에 쓰지 않는다 (가드를 거친다).
+- README와 화면의 효과 수치는 실제 실행 기록(스냅샷)에서 계산한 값만 쓴다. 지어낸 성과 수치는 금지한다.
 - 비밀값은 커밋하지 않는다.
 
 ## 구조
@@ -28,7 +30,10 @@ apps/collector   수집 에이전트 (Node 22, TS, better-sqlite3, zod, MCP SDK,
   src/pipeline/      수집 실행 한 번
   src/queries/       읽기 SQL. CLI, MCP, export가 모두 여기만 쓴다
   src/demo/          문서 기반 픽스처와 데모 시나리오
-apps/web         스냅샷 뷰어 (React 19, Vite, Tailwind v4)
+  src/agent/         관찰 → LLM 제안 → 가드 → 사람의 결정 → 실행 (docs/decisions/0003)
+  src/mcp.ts         MCP 서버 (조회·관찰·제안. 승인 도구 없음)
+  src/serve.ts       로컬 검토 API (127.0.0.1 전용)
+apps/web         스냅샷 뷰어 + 제안 검토 화면 (React 19, Vite, Tailwind v4)
 docs/decisions/  결정 기록
 legacy/          원본 (git 제외)
 ```

@@ -3,7 +3,8 @@
  *
  * - normal: 정상 수집 3회. 두 번째 TikTok 실행은 같은 쿼리를 다시 돌려 멱등성(새 행 0, 갱신만)을 보여준다.
  * - browser: 실제 Chromium으로 가상 피드 v1→v2→v3을 수집한다. 마크업 변화가 어떻게 기록되는지 보여준다.
- * - full: failures + browser. 웹 화면용 스냅샷은 이 시나리오로 만든다.
+ * - full: failures + browser.
+ * - agent: full + 에이전트 계획·가드·승인 데모 (demo/agent-demo.ts). 웹 화면용 스냅샷은 이 시나리오로 만든다.
  * - failures: normal 이후 실패 상황을 차례로 재현한다.
  *   429 재시도 성공 → 503 연속으로 부분 실패 → 토큰 만료(재시도 안 함) →
  *   문서와 다른 필드명(video_id) + 식별 불가 항목 + 페이지 상한 → 좋아요 필드 소실 감지 + Graph 한도 오류 재시도
@@ -28,8 +29,14 @@ import {
   type TikTokVideoSeed,
 } from './fixtures.ts';
 
-export type ScenarioName = 'normal' | 'failures' | 'browser' | 'full';
-export const SCENARIOS: readonly ScenarioName[] = ['normal', 'failures', 'browser', 'full'];
+export type ScenarioName = 'normal' | 'failures' | 'browser' | 'full' | 'agent';
+export const SCENARIOS: readonly ScenarioName[] = [
+  'normal',
+  'failures',
+  'browser',
+  'full',
+  'agent',
+];
 
 export interface ScenarioStep {
   label: string;
@@ -106,7 +113,8 @@ function browserSteps(now: Date): ScenarioStep[] {
 
 export function buildScenario(name: ScenarioName, now: Date): ScenarioStep[] {
   if (name === 'browser') return browserSteps(now);
-  if (name === 'full') return [...buildScenario('failures', now), ...browserSteps(now)];
+  if (name === 'full' || name === 'agent')
+    return [...buildScenario('failures', now), ...browserSteps(now)];
 
   const tiktok = (steps: HttpResponse[]) =>
     tiktokResearchAdapter({

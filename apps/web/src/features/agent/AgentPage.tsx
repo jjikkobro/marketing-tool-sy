@@ -24,13 +24,13 @@ export function AgentPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Agent"
-        title="AI 에이전트 연결"
-        description="수집한 데이터를 MCP 도구로 열어, AI와 대화하면서 콘텐츠를 찾고 수집 상태를 확인할 수 있게 합니다."
+        title="MCP 연결"
+        description="수집 데이터와 제안 기능을 MCP 도구로 열어, Claude Code 같은 AI가 데이터를 조회하고 다음 수집을 제안하게 합니다."
         actions={
           snapshot.data && (
             <SnapshotBadge
-              generatedAt={snapshot.data.generatedAt}
-              scenario={snapshot.data.scenario}
+              generatedAt={snapshot.data.snapshot.generatedAt}
+              scenario={snapshot.data.snapshot.scenario}
             />
           )
         }
@@ -48,7 +48,8 @@ export function AgentPage() {
           <CopyButton text={CONNECT_COMMAND} />
         </div>
         <p className="border-t border-ink-100 px-6 py-3 text-xs text-ink-600">
-          모든 도구는 읽기 전용입니다. AI는 수집을 실행하거나 데이터를 지울 수 없습니다.
+          AI는 조회와 제안(propose_action)까지만 할 수 있습니다. 승인·실행 도구는 없어서, 제안은
+          가드를 거친 뒤 사람이 "제안 검토" 화면에서 결정합니다.
         </p>
       </Card>
 
@@ -79,7 +80,7 @@ export function AgentPage() {
             description={`이 화면의 스냅샷으로 계산한 실제 응답입니다. related_hashtags({ seed: "${EXAMPLE_SEED}" })`}
           />
           <pre className="max-h-96 overflow-auto px-6 py-5 font-mono text-xs leading-relaxed">
-            {JSON.stringify(snapshot.data.related[EXAMPLE_SEED] ?? [], null, 2)}
+            {JSON.stringify(snapshot.data.snapshot.related[EXAMPLE_SEED] ?? [], null, 2)}
           </pre>
         </Card>
       )}

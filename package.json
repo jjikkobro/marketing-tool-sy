@@ -13,7 +13,7 @@
     "demo": "npm run demo -w @studio/collector",
     "demo:fail": "npm run demo:fail -w @studio/collector",
     "demo:browser": "npm run cli -w @studio/collector -- demo --scenario browser",
-    "snapshot": "npm run cli -w @studio/collector -- demo --scenario full && npm run cli -w @studio/collector -- export --scenario full --out ../web/public/data",
+    "snapshot": "npm run cli -w @studio/collector -- demo --scenario agent && npm run cli -w @studio/collector -- export --scenario agent --out ../web/public/data",
     "mcp": "npm run mcp -w @studio/collector",
     "dev": "npm run dev -w @studio/web",
     "build": "npm run build -w @studio/web",
@@ -22,7 +22,10 @@
     "lint": "npm run lint --workspaces --if-present",
     "check:leaks": "node scripts/check-leaks.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "demo:agent": "npm run cli -w @studio/collector -- demo --scenario agent",
+    "dev:live": "node scripts/dev-live.mjs",
+    "agent": "npm run agent -w @studio/collector --"
   },
   "devDependencies": {
     "prettier": "^3.10.1",

@@ -18,8 +18,8 @@ export function OperationsPage() {
         actions={
           snapshot.data && (
             <SnapshotBadge
-              generatedAt={snapshot.data.generatedAt}
-              scenario={snapshot.data.scenario}
+              generatedAt={snapshot.data.snapshot.generatedAt}
+              scenario={snapshot.data.snapshot.scenario}
             />
           )
         }
@@ -32,11 +32,11 @@ export function OperationsPage() {
       ) : (
         <>
           <section aria-label="어댑터 상태" className="grid gap-3 md:grid-cols-3">
-            {snapshot.data.health.map((health) => (
+            {snapshot.data.snapshot.health.map((health) => (
               <AdapterHealthCard key={health.adapterId} health={health} />
             ))}
           </section>
-          <RunTable runs={snapshot.data.runs} errors={snapshot.data.errors} />
+          <RunTable runs={snapshot.data.snapshot.runs} errors={snapshot.data.snapshot.errors} />
         </>
       )}
     </div>
