@@ -12,6 +12,7 @@ export const platformLabel: Record<Platform, string> = {
 export const sourceLabel: Record<SourceKind, string> = {
   'official-api': '공식 API',
   browser: '브라우저',
+  'web-search': '검색 API',
 };
 
 export const statusMeta: Record<RunStatus, { label: string; tone: BadgeTone }> = {

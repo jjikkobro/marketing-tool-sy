@@ -1,6 +1,23 @@
 import type { LiveStatus } from '@studio/collector/schema';
 import { cn } from '../../lib/cn';
 
+const SOCIAL_PLATFORMS: readonly ('tiktok' | 'instagram')[] = ['tiktok', 'instagram'];
+
+const SOCIAL_SOURCE: Record<
+  LiveStatus['sources']['tiktok'],
+  { value: string; hint: string | null }
+> = {
+  official: { value: '공식 API', hint: null },
+  search: {
+    value: '검색 API · 실제 공개 게시물',
+    hint: '공식 API는 계정 승인이 필요해 꺼 둠. 조회수·좋아요는 없음(—)',
+  },
+  recorded: {
+    value: '녹화된 가상 데이터',
+    hint: '공식 API 권한·검색 API 키가 없어 공식 응답 형식의 녹화본 사용',
+  },
+};
+
 /**
  * 무엇이 실시간이고 무엇이 녹화인지 항상 보이게 한다.
  * 심사자가 "AI가 정말 지금 돌았는가"를 의심하지 않아도 되게 하고, SNS 데이터가 가상이라는 점도 숨기지 않는다.
@@ -32,15 +49,15 @@ export function LiveStatusCard({
           on: live.sources.youtube === 'live',
           hint: live.sources.youtube === 'live' ? '30일 보관·집계 제외 등 YouTube 정책 준수' : null,
         },
-        {
-          label: 'TikTok·Instagram 수집',
-          value:
-            live.sources.tiktok === 'live' || live.sources.instagram === 'live'
-              ? '실서비스 API'
-              : '녹화된 가상 데이터',
-          on: live.sources.tiktok === 'live' || live.sources.instagram === 'live',
-          hint: '공식 API 권한(연구 승인·Meta 앱)이 필요해 공식 응답 형식의 녹화본 사용',
-        },
+        ...SOCIAL_PLATFORMS.map((platform) => {
+          const source = live.sources[platform];
+          return {
+            label: `${platform === 'tiktok' ? 'TikTok' : 'Instagram'} 수집`,
+            value: SOCIAL_SOURCE[source].value,
+            on: source !== 'recorded',
+            hint: SOCIAL_SOURCE[source].hint,
+          };
+        }),
       ]
     : [
         {

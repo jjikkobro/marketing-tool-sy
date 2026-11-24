@@ -3,8 +3,8 @@
 > 이 프로젝트를 맡는 모든 에이전트와 사람이 함께 보는 단일 현황판이다.
 > 작업 전에 읽고, 작업 후 갱신해서 **같은 커밋에** 포함한다. 규칙은 [AGENTS.md](AGENTS.md)에 있다.
 
-- **현재 단계**: v0.4 — 라이브 데모(Claude 실시간, 방문자 샌드박스), YouTube 실제 수집, 마케터용 기획안 → 지원자: YouTube 키 발급, Render 배포, 영상·서명
-- **마지막 갱신**: 2026-11-24 · Claude Code (Opus 5.5)
+- **현재 단계**: v0.5 — TikTok·Instagram 공식 API를 끄고 검색 API(Tavily)로 실제 공개 게시물 수집, 실제 데이터 시드 → 지원자: YouTube·Tavily 키 발급, Render 배포, 영상·서명
+- **마지막 갱신**: 2026-11-25 · Claude Code (Opus 5.5)
 - **저장소**: https://github.com/jjikkobro/marketing-tool-sy
 
 ---
@@ -41,7 +41,8 @@
 
 ### 지원자가 직접 해야 할 일 (에이전트가 대신할 수 없음)
 0-1. [ ] **YouTube API 키 발급**: Google Cloud Console → YouTube Data API v3 사용 설정 → API 키 → `apps/collector/.env`의 YOUTUBE_API_KEY. 받으면 실제 수집을 검증한다 (아직 미검증)
-0-2. [ ] **Render 배포**: README의 Deploy to Render → ANTHROPIC_API_KEY, YOUTUBE_API_KEY 입력. 제출 기간에는 starter 플랜(잠들지 않음) 권장. 배포 주소를 README 상단에 추가
+0-1b. [ ] **Tavily API 키 발급**: https://tavily.com 가입(무료 월 1,000회, 카드 불필요) → `apps/collector/.env`의 TAVILY_API_KEY. 받으면 검색 결과에 게시일이 얼마나 붙는지 먼저 확인한다 (0006 미확인 항목)
+0-2. [ ] **Render 배포**: README의 Deploy to Render → ANTHROPIC_API_KEY, YOUTUBE_API_KEY, TAVILY_API_KEY 입력. 제출 기간에는 starter 플랜(잠들지 않음) 권장. 배포 주소를 README 상단에 추가
 0-3. [ ] `apps/web/.env`의 키 삭제 (키는 `apps/collector/.env`로 옮겼다)
 0. [ ] (선택) **GitHub Pages 활성화**: 저장소 Settings → Pages → Source를 "GitHub Actions"로 변경 → Actions에서 "Deploy to GitHub Pages" 재실행. 주소: https://jjikkobro.github.io/marketing-tool-sy/
 1. [ ] `docs/decisions/0001`의 "지원자 확인" 4항목을 점검하고 서명한다
@@ -90,6 +91,7 @@
 | 11-24 | 시뮬레이션 30회 → S4(라이브 + 얇은 기획 층) 채택, 원본 기능 전면 이식 기각 | 0005 |
 | 11-24 | YouTube 재도입(0001 뒤집기): 주력이 아닌 "실제 동작 증거", 정책(30일·집계 금지·쿼터)을 코드로 | 0005 |
 | 11-24 | 라이브 데모는 Render(Docker). GitHub Pages는 읽기 전용 보조 | 0005 |
+| 11-25 | TikTok·IG 공식 API는 토큰 있을 때만, 실제 데이터는 검색 API(Tavily). Google CSE 제안 수정, 로그인 브라우저 수집 기각 | 0006 (신규 고객 불가, 약관 3.4항, 자격 증명 노출) |
 | 11-24 | 배포는 GitHub Pages (Vercel 아님) → 0005에서 Render로 변경 | 계정 연동 없이 저장소 워크플로만으로 배포 가능. 정적 스냅샷이라 서버 불필요 |
 
 ## 5. 면접 예상 질문 (토론에서 면접관 역할이 뽑은 질문)
@@ -104,6 +106,20 @@
 ## 6. 인계 로그
 
 새 항목을 맨 위에 추가한다.
+
+### 2026-11-25 (7) · Claude Code (Opus 5.5)
+- **한 일**
+  - Docker 빌드 실패를 고쳤다. better-sqlite3 소스 빌드에 필요한 make·g++·python3를 설치한다 (깨끗한 설치로 `not found: make` 재현)
+  - 검색 API 어댑터(`search-tiktok`, `search-instagram`)와 마이그레이션 005(source `web-search`)를 추가했다
+  - 공식 API 비활성화 규칙(`availability.ts`)을 가드·계획자·화면이 함께 쓴다. 검색 하루 상한을 둔다
+  - 라이브 시드: 실제 키가 있으면 실제 데이터 + Claude 계획 1회, 실제 수집이 0건이면 녹화 시드로 대체
+  - 로그인 브라우저 수집을 검토하고 기각했다 (0006)
+- **확인**
+  - 테스트 116개 통과. 005를 빼면 새 테스트가 실패한다
+  - 기존 DB 사본에 005를 적용해 행 수 보존과 외래키 이상 없음을 확인했다
+  - 잘못된 키로 실제 Tavily를 호출해 401 → auth 분류, 녹화 시드 대체를 확인했다
+- **미검증**: 유효한 Tavily·YouTube 키로 실제 수집, Docker 이미지 빌드(CI에서 확인 예정)
+- **설정**: `~/.claude/settings.json`에 claude-api 스킬 `user-invocable-only` 적용은 권한 분류기가 막아 하지 못했다
 
 ### 2026-11-24 (6) · Claude Code (Opus 5.5)
 - **한 일**

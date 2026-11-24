@@ -11,7 +11,15 @@ import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { z } from 'zod';
 import type { ProposalDraft } from '../schema.ts';
+import { collectUnavailableReason } from './availability.ts';
 import { AGENT_ADAPTERS } from './guard.ts';
+
+/** 지금 환경에서 실제로 실행할 수 있는 어댑터만 계획자에게 알려준다 (막힐 제안을 애초에 줄인다) */
+function availableAdapters() {
+  return Object.fromEntries(
+    Object.entries(AGENT_ADAPTERS).filter(([id]) => collectUnavailableReason(id) === null),
+  );
+}
 import type { Observation } from './observation.ts';
 
 export interface Planner {
@@ -78,7 +86,8 @@ actions의 종류
   YouTube 영상(video:youtube:*)은 영상 단위 참고 사례로만 인용하고, 여러 영상의 값을 합치거나 비교 지표를 만들지 않는다.
   "바이럴을 예측한다" 같은 단정은 하지 않는다. 데이터가 보여주는 사실과 기획 가설을 구분해 쓴다.
 
-사용할 수 있는 어댑터와 검색 종류: ${JSON.stringify(AGENT_ADAPTERS)}
+collect_query의 adapterId는 user 메시지의 adapters(지금 실행할 수 있는 어댑터와 검색 종류)에 있는 것만 쓴다.
+search-tiktok·search-instagram은 검색 API로 공개 게시물을 찾는 경로라 조회수·좋아요가 없다. 지표가 없는 사실로 반응을 단정하지 않는다.
 
 반드시 지킬 것 (어기면 검증기가 제안을 차단한다)
 - evidence에는 facts에 있는 factId만 넣는다. 없는 사실을 만들지 않는다.
@@ -113,7 +122,7 @@ export function claudePlanner(
         messages: [
           {
             role: 'user',
-            content: `관찰 시각: ${observation.generatedAt}\n\nfacts:\n${JSON.stringify(observation.facts)}\n\nrecentDecisions:\n${JSON.stringify(observation.recentDecisions)}\n\nopenProposals:\n${JSON.stringify(observation.openProposals)}`,
+            content: `관찰 시각: ${observation.generatedAt}\n\nadapters:\n${JSON.stringify(availableAdapters())}\n\nfacts:\n${JSON.stringify(observation.facts)}\n\nrecentDecisions:\n${JSON.stringify(observation.recentDecisions)}\n\nopenProposals:\n${JSON.stringify(observation.openProposals)}`,
           },
         ],
       });

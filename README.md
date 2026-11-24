@@ -8,7 +8,7 @@
 
 [![CI](https://github.com/jjikkobro/marketing-tool-sy/actions/workflows/ci.yml/badge.svg)](https://github.com/jjikkobro/marketing-tool-sy/actions/workflows/ci.yml) [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/jjikkobro/marketing-tool-sy)
 
-> 삼양라운드스퀘어 **Popow – AI Agent Builder** 지원을 위한 개인 포트폴리오입니다. 삼양라운드스퀘어의 공식 서비스가 아닙니다. TikTok·Instagram 데이터와 계정은 가상이며, YouTube 데이터는 YouTube Data API에서 받은 실제 데이터입니다(키가 설정된 경우).
+> 삼양라운드스퀘어 **Popow – AI Agent Builder** 지원을 위한 개인 포트폴리오입니다. 삼양라운드스퀘어의 공식 서비스가 아닙니다. 키가 설정된 라이브 데모에서는 YouTube(Data API)와 TikTok·Instagram(검색 API로 찾은 공개 게시물)이 실제 데이터입니다. 키가 없거나 정적 스냅샷이면 TikTok·Instagram은 `demo_creator_NN` 형식의 가상 데이터입니다.
 
 | 개요 · 직접 해보기 | AI 제안 검토 (Claude 실시간) | 포맷·콘텐츠 |
 |---|---|---|
@@ -52,7 +52,8 @@
 flowchart LR
   subgraph collect["수집 (결정적)"]
     YT["YouTube Data API<br/>(실제)"] --> R
-    TT["TikTok·Instagram<br/>(녹화 응답)"] --> R
+    SE["TikTok·Instagram<br/>(검색 API · 실제 공개 게시물)"] --> R
+    TT["TikTok·Instagram 공식 API<br/>(토큰 없으면 꺼짐 · 녹화 응답)"] -.-> R
     BR["브라우저 자동화<br/>(가상 피드)"] --> R
     R[재시도·오류 분류] --> P["파싱·검증 (zod)"] --> D[중복 제거] --> DB[(SQLite)]
   end
@@ -148,10 +149,11 @@ npm run live                # 웹 + API 라이브 서버 (http://127.0.0.1:8787)
 `apps/collector/.env`에 키를 넣으면 실제로 동작합니다. 예시는 `.env.example`에 있습니다.
 - `ANTHROPIC_API_KEY`: Claude 실시간 기획
 - `YOUTUBE_API_KEY`: YouTube 실제 수집
+- `TAVILY_API_KEY`: TikTok·Instagram 최근 공개 게시물 검색 ([Tavily](https://tavily.com), 무료 월 1,000회)
 
 키는 웹(`apps/web`)이 아니라 수집기에 둡니다. 웹의 `.env`에 `VITE_` 접두사로 넣으면 브라우저 번들로 공개되기 때문입니다.
 
-**배포**: 위의 Deploy to Render 버튼을 누르고 키 두 개를 입력합니다. 서버는 방문자마다 독립된 샌드박스를 주고, Claude 호출에는 방문자별·하루 상한을 둡니다.
+**배포**: 위의 Deploy to Render 버튼을 누르고 키 세 개를 입력합니다. 실제 수집이 하나도 되지 않으면(키 오류·한도) 서버는 녹화 데이터로 뜨고, 실패 기록은 운영 화면에 남깁니다. 서버는 방문자마다 독립된 샌드박스를 주고, Claude 호출에는 방문자별·하루 상한을 둡니다.
 
 **MCP 연결** (엔지니어·AI 도구용)
 ```bash
@@ -160,7 +162,9 @@ claude mcp add social-collector -- npx tsx apps/collector/src/mcp.ts
 
 ## 6. 한계
 
-- **TikTok·Instagram은 녹화 데이터입니다.** TikTok Research API는 연구 기관 승인이, Instagram은 본인 Meta 앱과 비즈니스 계정이 필요합니다. 어댑터는 공식 응답 형식으로 만들고 녹화 응답으로 시험했습니다.
+- **TikTok·Instagram 공식 API는 꺼 두었습니다.** TikTok Research API는 연구 기관 승인이, Instagram은 본인 Meta 앱과 비즈니스 계정이 필요합니다. 공식 어댑터는 공식 응답 형식의 녹화본으로만 시험했고, 토큰이 생기면 켜집니다.
+- **TikTok·Instagram 실제 데이터는 검색 API로 찾은 공개 게시물입니다.** 검색 엔진이 색인한 게시물만 나오고, 조회수·좋아요는 없습니다(—). 그래서 반응 지표 기반 판단은 YouTube와 녹화 데이터에서만 보여줍니다. 게시일을 모르는 결과는 날짜를 지어내지 않고 버립니다.
+- **일반 계정으로 로그인해 브라우저로 수집하는 방식은 만들지 않았습니다.** 두 플랫폼 약관이 허락 없는 자동 수집을 금지하고, 공개 서버에 로그인 정보를 둬야 하며, 계정 정지 위험이 있습니다. 브라우저 자동화는 저장소 안의 가상 피드에만 씁니다([0006](docs/decisions/0006-검색-API와-로그인-수집-검토.md)).
 - **검증기는 "근거와 숫자가 데이터와 맞는가"만 봅니다.** "좋은 기획인가"는 마케터가 판단합니다. 숫자가 어떤 대상의 값인지(A의 값을 B처럼 쓰기)는 문장 의미를 알아야 해서 검사하지 못합니다. 그래서 화면에 근거 값을 나란히 보여줍니다.
 - 같은 컴퓨터의 셸 권한을 가진 AI는 사람을 흉내 낼 수 있습니다. 최종 경계는 그런 권한을 주지 않는 것입니다([0004](docs/decisions/0004-레드팀-검토와-대응.md)).
 

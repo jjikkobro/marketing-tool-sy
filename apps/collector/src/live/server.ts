@@ -3,8 +3,8 @@
  *
  * - 방문자마다 데모 DB의 사본(샌드박스)을 준다. 각자 AI 제안을 받고 승인·실행해 볼 수 있다.
  * - AI 계획(Claude)은 실제로 호출한다. 비용과 남용은 ClaudeBudget으로 묶고, 한도를 넘으면 녹화 응답으로 대체한 이유를 보여준다.
- * - 수집: YouTube는 YOUTUBE_API_KEY가 있으면 실제 API로 수집한다. TikTok·Instagram은 실제 API 권한이 없어
- *   공식 응답 형식의 녹화본을 쓴다. 플랫폼별 상태를 화면에 그대로 표시한다.
+ * - 수집: YouTube는 YOUTUBE_API_KEY로 실제 API, TikTok·Instagram은 공식 API 계정이 없어 검색 API(TAVILY_API_KEY)로
+ *   실제 공개 게시물을 찾는다. 키가 없으면 녹화본을 쓴다. 플랫폼별 상태를 화면에 그대로 표시한다 (docs/decisions/0006).
  * - 쓰기 요청은 Host·Origin·Content-Type·세션 토큰을 검사한다 (review-security.ts).
  *
  * 실행: npm run live (로컬) · 배포: Dockerfile / render.yaml
@@ -15,6 +15,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { extname, join, normalize, resolve } from 'node:path';
 import { z } from 'zod';
 import { adapterFactoryFromEnv } from '../agent/adapters-from-env.ts';
+import { sourcesFromEnv } from '../agent/availability.ts';
 import { claudePlanner, recordedPlanner, type Planner } from '../agent/planners.ts';
 import { acknowledge, approve, planAndGuard, reject, ReviewError } from '../agent/review.ts';
 import { rejectCrossSite } from '../review-security.ts';
@@ -68,9 +69,12 @@ const MIME: Record<string, string> = {
 };
 
 console.log('시드 DB를 만드는 중…');
-const { seed, browserSeeded, youtubeSeeded } = await buildSeed();
-if (youtubeSeeded > 0)
-  console.log(`YouTube 실제 데이터 ${youtubeSeeded}건으로 시드를 만들었습니다`);
+const { seed, dataMode, browserSeeded, realItems } = await buildSeed();
+console.log(
+  dataMode === 'live'
+    ? `실제 데이터 ${realItems}건으로 시드를 만들었습니다`
+    : '녹화 데이터로 시드를 만들었습니다',
+);
 const sessions = new SessionStore(seed, {
   maxSessions: Number(env.MAX_SESSIONS ?? 200),
   ttlMs: 60 * 60_000,
@@ -119,7 +123,7 @@ function liveStatus(session: Session): LiveStatus {
       remainingToday: CLAUDE_ENABLED ? remainingToday : 0,
       remainingForSession: CLAUDE_ENABLED ? remainingForSession : 0,
     },
-    sources: adapterFactoryFromEnv().sources,
+    sources: sourcesFromEnv(),
     browserSeeded,
     sessionStartedAt: new Date(session.createdAt).toISOString(),
   };
@@ -219,7 +223,7 @@ const server = createServer(async (request, response) => {
     if (request.method === 'GET' && url.pathname === '/api/live') {
       response.setHeader('x-review-token', session.token);
       return send(response, 200, {
-        snapshot: buildSnapshot(session.db, { scenario: 'live-sandbox', dataMode: 'recorded' }),
+        snapshot: buildSnapshot(session.db, { scenario: 'live-sandbox', dataMode }),
         live: liveStatus(session),
       });
     }
@@ -264,7 +268,7 @@ server.listen(PORT, HOST, () => {
   console.log(
     `  AI: ${CLAUDE_ENABLED ? `Claude 실시간 (${CLAUDE_MODEL})` : '녹화 응답 (ANTHROPIC_API_KEY 없음)'}`,
   );
-  const { sources } = adapterFactoryFromEnv();
+  const sources = sourcesFromEnv();
   console.log(
     `  수집: YouTube ${sources.youtube} · TikTok ${sources.tiktok} · Instagram ${sources.instagram} · 브라우저 시드 ${browserSeeded ? '포함' : '제외'}`,
   );

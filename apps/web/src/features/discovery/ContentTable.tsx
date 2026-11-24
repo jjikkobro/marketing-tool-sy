@@ -18,7 +18,7 @@ function parsePlatformFilter(value: string): Platform | 'all' {
 interface ContentTableProps {
   contents: StoredContent[];
   hashtag: string | null;
-  /** 녹화 데이터면 URL이 실제로 존재하지 않으므로 링크를 걸지 않는다 */
+  /** 녹화 데이터면 공식 API·브라우저 행의 URL이 실제로 존재하지 않으므로 링크를 걸지 않는다 */
   recorded: boolean;
 }
 
@@ -104,10 +104,16 @@ export function ContentTable({ contents, hashtag, recorded }: ContentTableProps)
                   </div>
                   <p className="mt-1.5 line-clamp-2">{content.caption || '(캡션 없음)'}</p>
                   {content.url && (
-                    // YouTube는 실제 API로 받은 데이터라 항상 원본으로 연결한다 (정책 III.I.4: 링크를 제거하지 않는다)
+                    // YouTube·검색 API 행은 실제 게시물이라 항상 원본으로 연결한다 (YouTube 정책 III.I.4: 링크를 제거하지 않는다).
+                    // 브라우저 행은 저장소 안의 가상 피드라 어느 모드에서도 실제 게시물이 없다.
                     <SourceLink
                       url={content.url}
-                      recorded={recorded && content.platform !== 'youtube'}
+                      recorded={
+                        content.source === 'browser' ||
+                        (recorded &&
+                          content.platform !== 'youtube' &&
+                          content.source !== 'web-search')
+                      }
                       youtube={content.platform === 'youtube'}
                     />
                   )}

@@ -9,8 +9,11 @@ import { z } from 'zod';
 export const platformSchema = z.enum(['tiktok', 'instagram', 'youtube', 'web']);
 export type Platform = z.infer<typeof platformSchema>;
 
-/** 어떤 경로로 수집했는지. 화면과 README에 출처 배지로 그대로 보여준다. */
-export const sourceKindSchema = z.enum(['official-api', 'browser']);
+/**
+ * 어떤 경로로 수집했는지. 화면과 README에 출처 배지로 그대로 보여준다.
+ * - web-search: 검색 API로 공개 게시물 URL을 찾은 것. 지표는 없다 (docs/decisions/0006)
+ */
+export const sourceKindSchema = z.enum(['official-api', 'browser', 'web-search']);
 export type SourceKind = z.infer<typeof sourceKindSchema>;
 
 export const queryKindSchema = z.enum(['keyword', 'hashtag']);
@@ -283,11 +286,15 @@ export const liveStatusSchema = z.object({
     remainingToday: z.number().int(),
     remainingForSession: z.number().int(),
   }),
-  /** 플랫폼별 수집 상태: live(실제 API), recorded(녹화 응답), off(키 없음) */
+  /**
+   * 플랫폼별 수집 경로
+   * - youtube: live(실제 API) · off(키 없음)
+   * - tiktok·instagram: official(공식 API 토큰) · search(검색 API로 실제 공개 게시물) · recorded(녹화 응답)
+   */
   sources: z.object({
     youtube: z.enum(['live', 'off']),
-    tiktok: z.enum(['live', 'recorded']),
-    instagram: z.enum(['live', 'recorded']),
+    tiktok: z.enum(['official', 'search', 'recorded']),
+    instagram: z.enum(['official', 'search', 'recorded']),
   }),
   browserSeeded: z.boolean(),
   sessionStartedAt: z.iso.datetime(),

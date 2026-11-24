@@ -15,6 +15,8 @@ import type { Db } from '../db/database.ts';
 import type { Fact, GuardCheck, ProposalDraft, QueryKind } from '../schema.ts';
 import { proposalDraftSchema } from '../schema.ts';
 import { YOUTUBE_DAILY_SEARCH_LIMIT, youtubeSearchesToday } from '../core/youtube-policy.ts';
+import { collectUnavailableReason } from './availability.ts';
+import { SEARCH_DAILY_LIMIT, webSearchesToday } from './search-quota.ts';
 import {
   factById,
   INSTAGRAM_HASHTAG_LIMIT,
@@ -27,6 +29,8 @@ export const AGENT_ADAPTERS: Record<string, readonly QueryKind[]> = {
   'tiktok-research': ['keyword', 'hashtag'],
   'instagram-graph': ['hashtag'],
   'youtube-data': ['keyword', 'hashtag'],
+  'search-tiktok': ['keyword', 'hashtag'],
+  'search-instagram': ['keyword', 'hashtag'],
 };
 
 const RECENT_COLLECTION_HOURS = 24;
@@ -324,9 +328,8 @@ function checkCapability(db: Db, draft: ProposalDraft): GuardCheck {
     }
     const supported = AGENT_ADAPTERS[draft.adapterId];
     if (!supported) return fail(`에이전트가 실행할 수 없는 어댑터: ${draft.adapterId}`);
-    if (draft.adapterId === 'youtube-data' && !process.env.YOUTUBE_API_KEY) {
-      return fail('YouTube API 키가 설정되지 않아 실행할 수 없습니다');
-    }
+    const unavailable = collectUnavailableReason(draft.adapterId);
+    if (unavailable) return fail(unavailable);
     if (!supported.includes(draft.queryKind)) {
       return fail(
         `${draft.adapterId}는 ${draft.queryKind} 검색을 지원하지 않습니다 (지원: ${supported.join(', ')})`,
@@ -524,6 +527,23 @@ function checkDuplicate(
 }
 
 function checkQuota(db: Db, draft: ProposalDraft, now: Date): GuardCheck {
+  if (
+    draft.kind === 'collect_query' &&
+    (draft.adapterId === 'search-tiktok' || draft.adapterId === 'search-instagram')
+  ) {
+    const used = webSearchesToday(db, now);
+    return used < SEARCH_DAILY_LIMIT
+      ? {
+          check: 'quota',
+          passed: true,
+          detail: `검색 API 오늘 ${used}/${SEARCH_DAILY_LIMIT}회 (UTC 기준)`,
+        }
+      : {
+          check: 'quota',
+          passed: false,
+          detail: `검색 API 오늘 한도 도달 (${used}/${SEARCH_DAILY_LIMIT}회)`,
+        };
+  }
   if (draft.kind === 'collect_query' && draft.adapterId === 'youtube-data') {
     const used = youtubeSearchesToday(db, now);
     return used < YOUTUBE_DAILY_SEARCH_LIMIT

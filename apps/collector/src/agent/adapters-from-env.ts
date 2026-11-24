@@ -1,37 +1,44 @@
 /**
- * 승인된 제안을 실행할 어댑터를 고른다.
- * - YouTube: YOUTUBE_API_KEY가 있으면 실제 API로 수집한다. 없으면 실행할 수 없다 (가드가 미리 막는다).
- * - TikTok·Instagram: 실서비스 토큰이 있으면 실제 API, 없으면 공식 응답 형식의 녹화본으로 실행한다.
- * 플랫폼별로 무엇이 실제이고 무엇이 녹화인지 sources로 함께 돌려줘 화면에 그대로 보여준다.
+ * 승인된 제안을 실행할 어댑터를 고른다. 어떤 경로를 쓸 수 있는지는 availability.ts가 정한다.
+ * - YouTube: YOUTUBE_API_KEY로 실제 API 수집
+ * - TikTok·Instagram: 공식 토큰이 있으면 공식 API, 없으면 검색 API(TAVILY_API_KEY)로 실제 공개 게시물을 찾는다.
+ *   둘 다 없으면 공식 응답 형식의 녹화본으로 실행한다 (녹화 데모).
+ * 녹화된 과거 실행의 재실행(retry_run)은 녹화본으로 다시 돌린다.
  */
 import type { LiveStatus } from '../schema.ts';
 import { fetchTransport } from '../adapters/http.ts';
 import { instagramGraphAdapter } from '../adapters/instagram-graph.ts';
 import { tiktokResearchAdapter } from '../adapters/tiktok-research.ts';
+import { webSearchAdapter } from '../adapters/web-search.ts';
 import { youtubeDataAdapter } from '../adapters/youtube-data.ts';
 import { demoAdapterFactory } from '../demo/agent-adapters.ts';
+import { hasLiveCollection, sourcesFromEnv } from './availability.ts';
 import type { AdapterFactory } from './review.ts';
 
 export function adapterFactoryFromEnv(
   env: NodeJS.ProcessEnv = process.env,
   now = new Date(),
 ): { mode: 'live' | 'recorded'; sources: LiveStatus['sources']; adapterFor: AdapterFactory } {
-  const { TIKTOK_RESEARCH_TOKEN, IG_ACCESS_TOKEN, IG_USER_ID, YOUTUBE_API_KEY } = env;
-  const sources: LiveStatus['sources'] = {
-    youtube: YOUTUBE_API_KEY ? 'live' : 'off',
-    tiktok: TIKTOK_RESEARCH_TOKEN ? 'live' : 'recorded',
-    instagram: IG_ACCESS_TOKEN && IG_USER_ID ? 'live' : 'recorded',
-  };
+  const { TIKTOK_RESEARCH_TOKEN, IG_ACCESS_TOKEN, IG_USER_ID, YOUTUBE_API_KEY, TAVILY_API_KEY } =
+    env;
   const recorded = demoAdapterFactory(now);
   const transport = fetchTransport();
 
   return {
-    mode: Object.values(sources).includes('live') ? 'live' : 'recorded',
-    sources,
+    mode: hasLiveCollection(env) ? 'live' : 'recorded',
+    sources: sourcesFromEnv(env),
     adapterFor: (adapterId, query) => {
       if (adapterId === 'youtube-data') {
         if (!YOUTUBE_API_KEY) throw new Error('YOUTUBE_API_KEY가 설정되지 않았습니다');
         return youtubeDataAdapter({ transport, apiKey: YOUTUBE_API_KEY });
+      }
+      if (adapterId === 'search-tiktok' || adapterId === 'search-instagram') {
+        if (!TAVILY_API_KEY) throw new Error('TAVILY_API_KEY가 설정되지 않았습니다');
+        return webSearchAdapter({
+          transport,
+          apiKey: TAVILY_API_KEY,
+          platform: adapterId === 'search-tiktok' ? 'tiktok' : 'instagram',
+        });
       }
       if (adapterId === 'tiktok-research' && TIKTOK_RESEARCH_TOKEN) {
         return tiktokResearchAdapter({ transport, accessToken: TIKTOK_RESEARCH_TOKEN });
