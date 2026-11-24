@@ -61,7 +61,7 @@
 - (없음)
 
 ### 다음 할 일 (위에서부터)
-1. [ ] GitHub 저장소 URL 확정 → `VITE_GITHUB_REPO_URL` 설정 *(사용자 확인 필요)*
+1. [x] GitHub 저장소 연결: https://github.com/jjikkobro/marketing-tool-sy
 2. [ ] `packages/shared`: 도메인 타입과 zod 스키마 (`SocialContent`, `CollectionRun`, `CollectorError`)
 3. [ ] P1 수집 파이프라인 설계 메모를 `docs/decisions/`에 남긴다 (어댑터 인터페이스, 중복 키, 재시도 정책)
 4. [ ] `apps/server`: Express + TS + Prisma(SQLite). 수집 실행 API와 데모 픽스처 어댑터
@@ -106,4 +106,3 @@
 - **남은 일**: 위 "다음 할 일"
 - **주의할 점**
   - WSL에 Chromium 시스템 라이브러리가 없다. sudo 없이 라이브러리를 받아 `LD_LIBRARY_PATH`로 지정해 스크린샷을 찍었다. 정식으로 쓰려면 `sudo npx playwright install-deps chromium`
-  - GitHub URL은 아직 placeholder다 (`apps/web/src/config/site.ts`)
