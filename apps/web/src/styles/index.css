@@ -1,0 +1,73 @@
+@import 'tailwindcss';
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+@import '@fontsource/poppins/latin-500.css';
+@import '@fontsource/poppins/latin-600.css';
+
+/*
+ * Roundsquare BI 디자인 토큰 (단일 출처)
+ * 출처: https://www.roundsquare.ai/group/ci (Core / Secondary Palette)
+ *
+ * 원칙 (CI Meaning)
+ *  - Unlimited White: 흰 바탕이 화면 대부분을 차지한다. 여백 중심으로 배치한다.
+ *  - 네모(질서·과학·기술): 카드, 표, 입력 같은 구조 요소. rounded-square(4px)를 쓴다.
+ *  - 동그라미(포용·창의·가능성): 배지, 상태 점, 주요 버튼. rounded-full을 쓴다.
+ *  - Evolving Orange는 강조할 곳에만 쓰고 넓은 면적에는 쓰지 않는다.
+ *
+ * 접근성
+ *  - 흰 배경에 #FF6400 글자를 쓰면 대비가 2.97:1로 WCAG AA에 미달한다.
+ *    흰 배경 위 오렌지 글자는 brand-700(#C24A00, 4.91:1)을 쓴다.
+ *  - 주요 버튼은 charcoal 배경에 흰 글자(12.8:1)를 쓴다.
+ */
+@theme {
+  /* Core Palette */
+  --color-brand: #ff6400; /* Evolving Orange · PMS 1505C */
+  --color-brand-50: #fff4ec;
+  --color-brand-100: #ffe3cf;
+  --color-brand-600: #e85a00;
+  --color-brand-700: #c24a00;
+  --color-charcoal: #323232; /* Sophisto Charcoal · PMS 447C */
+
+  /* Secondary Palette */
+  --color-burgundy: #5f0a32; /* PMS 4074C */
+  --color-burgundy-50: #f9eef3;
+  --color-tangerine: #ffa300; /* PMS 137C */
+  --color-tangerine-50: #fff6e5;
+  --color-tangerine-800: #8a5700; /* 밝은 배경 위 텍스트용 */
+  --color-sand: #f7decb; /* PMS 7604C */
+  --color-sand-50: #fdf7f2;
+
+  /* 차콜 기반 중립색 */
+  --color-ink-50: #fafafa;
+  --color-ink-100: #f3f3f3;
+  --color-ink-200: #e6e6e6;
+  --color-ink-300: #cfcfcf;
+  --color-ink-400: #a8a8a8;
+  --color-ink-500: #8a8a8a;
+  --color-ink-600: #6b6b6b; /* 보조 텍스트, 흰 배경 5.33:1 */
+  --color-ink-900: #323232;
+
+  /* 의미 색상 */
+  --color-positive: #1f7a4d;
+  --color-positive-50: #ebf6f0;
+
+  /* 형태 */
+  --radius-square: 4px;
+
+  /* 타이포그래피: 한글 Pretendard, 영문·숫자 Poppins (roundsquare.ai와 동일) */
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', sans-serif;
+  --font-display: Poppins, 'Pretendard Variable', Pretendard, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-white font-sans text-charcoal;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+}
