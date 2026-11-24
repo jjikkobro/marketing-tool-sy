@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: 공개 안전 (이전 직장 명칭 유출 검사)
+        run: npm run check:leaks
+
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+
+      # 브라우저 자동화 테스트(가상 피드 v1→v2→v3)는 실제 Chromium이 있어야 건너뛰지 않는다
+      - name: Chromium 설치
+        run: npx playwright install --with-deps chromium
+
+      - run: npm test
+
+      - name: 데모 실행 (키 없이 실패 시나리오 재현)
+        run: npm run demo:fail
+
+      - run: npm run build

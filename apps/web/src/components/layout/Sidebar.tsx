@@ -60,8 +60,8 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-ink-200 px-6 py-4 text-xs text-ink-600">
-        <p className="font-semibold text-charcoal">데모 워크스페이스</p>
-        <p className="mt-0.5">예시 데이터로 동작합니다</p>
+        <p className="font-semibold text-charcoal">녹화된 실행 재생</p>
+        <p className="mt-0.5">실제 SNS를 호출하지 않습니다</p>
       </div>
     </aside>
   );

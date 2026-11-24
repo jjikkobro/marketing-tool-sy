@@ -1,0 +1,34 @@
+{
+  "name": "@studio/collector",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./schema": "./src/schema.ts",
+    "./mcp-tools": "./src/mcp-tools.ts"
+  },
+  "scripts": {
+    "cli": "tsx src/cli.ts",
+    "demo": "tsx src/cli.ts demo",
+    "demo:fail": "tsx src/cli.ts demo --scenario failures",
+    "mcp": "tsx src/mcp.ts",
+    "export": "tsx src/cli.ts export --out ../web/public/data",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint --deny-warnings src test"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.6",
+    "oxlint": "^1.95.0",
+    "playwright": "^1.65.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "better-sqlite3": "^13.2.0",
+    "zod": "^4.6.7"
+  }
+}

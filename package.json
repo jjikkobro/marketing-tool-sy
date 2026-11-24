@@ -1,7 +1,7 @@
 {
   "name": "content-studio",
   "private": true,
-  "description": "브랜드 콘텐츠 운영 자동화 툴 (삼양라운드스퀘어 지원 포트폴리오)",
+  "description": "TikTok·Instagram 콘텐츠 수집 에이전트: 실패·누락·중복 기록, MCP 도구 공개 (삼양라운드스퀘어 지원 포트폴리오)",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -10,10 +10,17 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "npm run dev -w apps/web",
-    "build": "npm run build -w apps/web",
-    "lint": "npm run lint -w apps/web",
-    "typecheck": "npm run typecheck -w apps/web",
+    "demo": "npm run demo -w @studio/collector",
+    "demo:fail": "npm run demo:fail -w @studio/collector",
+    "demo:browser": "npm run cli -w @studio/collector -- demo --scenario browser",
+    "snapshot": "npm run cli -w @studio/collector -- demo --scenario full && npm run cli -w @studio/collector -- export --scenario full --out ../web/public/data",
+    "mcp": "npm run mcp -w @studio/collector",
+    "dev": "npm run dev -w @studio/web",
+    "build": "npm run build -w @studio/web",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "check:leaks": "node scripts/check-leaks.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
