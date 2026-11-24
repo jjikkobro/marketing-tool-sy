@@ -1,13 +1,21 @@
 import type { Proposal } from '@studio/collector/schema';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { decide, snapshotQuery, type Decision } from '../../api/snapshot';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router';
+import {
+  decide,
+  requestPlan,
+  resetSandbox,
+  snapshotQuery,
+  type Decision,
+} from '../../api/snapshot';
 import { SnapshotBadge } from '../../components/layout/SnapshotBadge';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { ErrorMessage, LoadingBlock } from '../../components/ui/StateMessage';
 import { cn } from '../../lib/cn';
 import { AgentLoop } from './AgentLoop';
 import { filterLabel, matchesFilter, type ProposalFilter } from './labels';
+import { PlanPanel } from './PlanPanel';
 import { ProposalCard } from './ProposalCard';
 
 const REVIEWER_KEY = 'social-collector:reviewer';
@@ -22,7 +30,7 @@ export function ProposalsPage() {
   const mutation = useMutation({
     mutationFn: (input: { id: Proposal['id']; decision: Decision; note: string }) => {
       const token = snapshot.data?.reviewToken;
-      if (!token) throw new Error('검토 API에 연결되어 있지 않습니다');
+      if (!token) throw new Error('라이브 서버에 연결되어 있지 않습니다');
       return decide(
         input.id,
         input.decision,
@@ -32,6 +40,45 @@ export function ProposalsPage() {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: snapshotQuery().queryKey }),
   });
+
+  const requireToken = () => {
+    const token = snapshot.data?.reviewToken;
+    if (!token) throw new Error('라이브 서버에 연결되어 있지 않습니다');
+    return token;
+  };
+  const refresh = () => queryClient.invalidateQueries({ queryKey: snapshotQuery().queryKey });
+
+  const plan = useMutation({
+    mutationFn: () => requestPlan(requireToken()),
+    onSuccess: async () => {
+      await refresh();
+      setFilter('all');
+    },
+  });
+
+  const reset = useMutation({
+    mutationFn: () => resetSandbox(requireToken()),
+    onSuccess: async () => {
+      plan.reset();
+      await refresh();
+      setFilter('pending');
+    },
+  });
+
+  // 개요 화면의 "AI에게 제안 받아보기"로 들어오면 한 번 자동 실행한다
+  const location = useLocation();
+  const navigate = useNavigate();
+  const autoStarted = useRef(false);
+  const autoPlan =
+    typeof location.state === 'object' && location.state !== null && 'autoPlan' in location.state
+      ? location.state.autoPlan === true
+      : false;
+  useEffect(() => {
+    if (!autoPlan || autoStarted.current || !snapshot.data?.reviewable) return;
+    autoStarted.current = true;
+    navigate(location.pathname, { replace: true, state: null });
+    plan.mutate();
+  }, [autoPlan, snapshot.data?.reviewable, navigate, location.pathname, plan]);
 
   function updateReviewer(value: string) {
     setReviewer(value);
@@ -62,6 +109,17 @@ export function ProposalsPage() {
         <ErrorMessage error={snapshot.error} />
       ) : (
         <>
+          <PlanPanel
+            live={snapshot.data.live}
+            reviewable={snapshot.data.reviewable}
+            running={plan.isPending}
+            result={plan.data ?? null}
+            error={plan.isError ? plan.error.message : reset.isError ? reset.error.message : null}
+            proposals={snapshot.data.snapshot.proposals}
+            onPlan={() => plan.mutate()}
+            onReset={() => reset.mutate()}
+          />
+
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-square border border-ink-200 bg-white px-5 py-3">
             <div role="tablist" aria-label="제안 상태" className="flex gap-1">
               {FILTERS.map((id) => {
@@ -98,7 +156,7 @@ export function ProposalsPage() {
                 />
               </label>
             ) : (
-              <span className="text-xs text-ink-600">정적 데모 · 읽기 전용</span>
+              <span className="text-xs text-ink-600">정적 스냅샷 · 읽기 전용</span>
             )}
           </div>
 
@@ -110,6 +168,7 @@ export function ProposalsPage() {
                   key={proposal.id}
                   proposal={proposal}
                   reviewable={snapshot.data.reviewable}
+                  fresh={plan.data?.proposalIds.includes(proposal.id) ?? false}
                   reviewer={reviewer}
                   pending={mutation.isPending && mutation.variables.id === proposal.id}
                   error={

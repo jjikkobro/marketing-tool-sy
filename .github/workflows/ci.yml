@@ -36,3 +36,19 @@ jobs:
         run: npm run demo:fail
 
       - run: npm run build
+
+  # 라이브 데모 이미지가 실제로 빌드되고 뜨는지 확인한다 (로컬에 Docker가 없어 CI에서 검증)
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: 이미지 빌드
+        run: docker build -t social-collector .
+      - name: 컨테이너 기동과 화면·API 응답 확인
+        run: |
+          docker run -d --name app -p 10000:10000 social-collector
+          for i in $(seq 1 60); do curl -fsS http://localhost:10000/api/health && break; sleep 2; done
+          curl -fsS http://localhost:10000/ | grep -q '<div id="root">'
+          curl -fsS -c jar http://localhost:10000/api/live | grep -q '"proposals"'
+          docker logs app

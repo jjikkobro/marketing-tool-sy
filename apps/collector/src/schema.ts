@@ -239,3 +239,28 @@ export const snapshotSchema = z.object({
   proposals: z.array(proposalSchema),
 });
 export type Snapshot = z.infer<typeof snapshotSchema>;
+
+/* ── 라이브 데모 상태 ─────────────────────────────────────────── */
+
+/** 지금 화면에서 무엇이 실시간이고 무엇이 녹화인지. 화면에 그대로 보여준다. */
+export const liveStatusSchema = z.object({
+  claude: z.object({
+    enabled: z.boolean(),
+    model: z.string().nullable(),
+    remainingToday: z.number().int(),
+    remainingForSession: z.number().int(),
+  }),
+  sns: z.enum(['recorded', 'live']),
+  browserSeeded: z.boolean(),
+  sessionStartedAt: z.iso.datetime(),
+});
+export type LiveStatus = z.infer<typeof liveStatusSchema>;
+
+export const planResponseSchema = z.object({
+  plannerId: z.string(),
+  live: z.boolean(),
+  fallbackReason: z.string().nullable(),
+  proposalIds: z.array(z.number().int()),
+  elapsedMs: z.number().int(),
+});
+export type PlanResponse = z.infer<typeof planResponseSchema>;

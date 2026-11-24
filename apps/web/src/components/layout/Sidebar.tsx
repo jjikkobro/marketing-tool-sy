@@ -1,9 +1,14 @@
+import { useQuery } from '@tanstack/react-query';
 import { NavLink } from 'react-router';
+import { snapshotQuery } from '../../api/snapshot';
+import { LiveStatusCard } from './LiveStatusCard';
 import { navigation } from '../../app/navigation';
 import { siteConfig } from '../../config/site';
 import { cn } from '../../lib/cn';
 
 export function Sidebar() {
+  const snapshot = useQuery(snapshotQuery());
+  const live = snapshot.data?.live ?? null;
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-ink-200 bg-white">
       <div className="flex h-16 items-center gap-2.5 px-6">
@@ -59,9 +64,8 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div className="border-t border-ink-200 px-6 py-4 text-xs text-ink-600">
-        <p className="font-semibold text-charcoal">녹화된 실행 재생</p>
-        <p className="mt-0.5">실제 SNS를 호출하지 않습니다</p>
+      <div className="border-t border-ink-200 px-6 py-4">
+        <LiveStatusCard live={live} compact />
       </div>
     </aside>
   );

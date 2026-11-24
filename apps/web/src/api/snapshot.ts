@@ -1,43 +1,56 @@
 import {
+  liveStatusSchema,
+  planResponseSchema,
   proposalSchema,
   snapshotSchema,
+  type LiveStatus,
+  type PlanResponse,
   type Proposal,
   type Snapshot,
 } from '@studio/collector/schema';
 import { queryOptions } from '@tanstack/react-query';
+import { z } from 'zod';
 
 /*
  * 데이터 출처는 두 가지다.
- * - 로컬 검토 모드(npm run dev:live): collector 검토 API(/api/snapshot)에서 읽고, 화면에서 승인·거절할 수 있다.
- * - 정적 배포: public/data/snapshot.json을 읽는다. 승인 API가 없으므로 읽기 전용이다.
+ * - 라이브 서버(npm run live, 배포): /api/live에서 방문자 샌드박스의 데이터와 라이브 상태를 읽는다.
+ *   AI 제안 요청과 승인·거절을 할 수 있다.
+ * - 정적 배포(GitHub Pages): public/data/snapshot.json을 읽는다. API가 없으므로 읽기 전용이다.
  * 어느 쪽이든 collector와 같은 zod 스키마로 런타임 검증을 한다.
  */
 export interface SnapshotResult {
   snapshot: Snapshot;
-  /** 검토 API에 연결되어 사람이 결정할 수 있는지 */
+  /** 라이브 서버에 연결되어 AI 호출·승인을 할 수 있는지 */
   reviewable: boolean;
-  /** 검토 API가 스냅샷 응답 헤더로만 주는 토큰. 쓰기 요청에 붙인다 (CSRF 방지) */
+  /** 라이브 서버가 응답 헤더로만 주는 세션 토큰. 쓰기 요청에 붙인다 (CSRF 방지) */
   reviewToken: string | null;
+  live: LiveStatus | null;
 }
+
+const liveEnvelopeSchema = z.object({ snapshot: snapshotSchema, live: liveStatusSchema });
+
+const api = (path: string) => `${import.meta.env.BASE_URL}api/${path}`;
 
 async function fetchSnapshot(): Promise<SnapshotResult> {
   try {
-    const live = await fetch(`${import.meta.env.BASE_URL}api/snapshot`);
-    const token = live.headers.get('x-review-token');
-    if (live.ok && token && live.headers.get('content-type')?.includes('application/json')) {
-      return {
-        snapshot: snapshotSchema.parse(await live.json()),
-        reviewable: true,
-        reviewToken: token,
-      };
+    const response = await fetch(api('live'), { credentials: 'same-origin' });
+    const token = response.headers.get('x-review-token');
+    if (
+      response.ok &&
+      token &&
+      response.headers.get('content-type')?.includes('application/json')
+    ) {
+      const { snapshot, live } = liveEnvelopeSchema.parse(await response.json());
+      return { snapshot, live, reviewable: true, reviewToken: token };
     }
   } catch {
-    // 검토 API가 없으면 정적 스냅샷으로 넘어간다
+    // 라이브 서버가 없으면 정적 스냅샷으로 넘어간다
   }
   const response = await fetch(`${import.meta.env.BASE_URL}data/snapshot.json`);
   if (!response.ok) throw new Error(`스냅샷을 불러오지 못했습니다 (${response.status})`);
   return {
     snapshot: snapshotSchema.parse(await response.json()),
+    live: null,
     reviewable: false,
     reviewToken: null,
   };
@@ -50,17 +63,16 @@ export const snapshotQuery = () =>
     staleTime: 30_000,
   });
 
-export type Decision = 'approve' | 'reject' | 'ack';
-
-export async function decide(
-  id: Proposal['id'],
-  decision: Decision,
-  body: { reviewer: string; note?: string },
-  reviewToken: string,
-): Promise<Proposal> {
-  const response = await fetch(`${import.meta.env.BASE_URL}api/proposals/${id}/${decision}`, {
+async function post<T>(
+  path: string,
+  body: unknown,
+  token: string,
+  schema: z.ZodType<T>,
+): Promise<T> {
+  const response = await fetch(api(path), {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-review-token': reviewToken },
+    credentials: 'same-origin',
+    headers: { 'content-type': 'application/json', 'x-review-token': token },
     body: JSON.stringify(body),
   });
   const payload: unknown = await response.json();
@@ -71,5 +83,26 @@ export async function decide(
         : '요청 실패';
     throw new Error(message);
   }
-  return proposalSchema.parse(payload);
+  return schema.parse(payload);
+}
+
+export type Decision = 'approve' | 'reject' | 'ack';
+
+export function decide(
+  id: Proposal['id'],
+  decision: Decision,
+  body: { reviewer: string; note?: string },
+  reviewToken: string,
+): Promise<Proposal> {
+  return post(`proposals/${id}/${decision}`, body, reviewToken, proposalSchema);
+}
+
+/** AI에게 다음 수집 제안을 받는다. 서버가 Claude를 실제로 호출하거나, 한도를 넘으면 녹화 응답으로 대체한다. */
+export function requestPlan(reviewToken: string): Promise<PlanResponse> {
+  return post('agent/plan', {}, reviewToken, planResponseSchema);
+}
+
+/** 내 샌드박스를 처음 상태로 되돌린다 */
+export function resetSandbox(reviewToken: string): Promise<{ ok: boolean }> {
+  return post('session/reset', {}, reviewToken, z.object({ ok: z.boolean() }));
 }

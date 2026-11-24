@@ -13,6 +13,8 @@ import { guardCheckLabel, proposalKindLabel, proposalStatusMeta } from './labels
 interface ProposalCardProps {
   proposal: Proposal;
   reviewable: boolean;
+  /** 방금 받은 제안이면 강조한다 */
+  fresh?: boolean;
   reviewer: string;
   pending: boolean;
   error: string | null;
@@ -22,6 +24,7 @@ interface ProposalCardProps {
 export function ProposalCard({
   proposal,
   reviewable,
+  fresh = false,
   reviewer,
   pending,
   error,
@@ -31,12 +34,20 @@ export function ProposalCard({
   const failed = proposal.checks.filter((c) => !c.passed);
 
   return (
-    <Card className={cn('p-6', proposal.status === 'pending' && 'border-brand/40')}>
+    <Card
+      className={cn(
+        'p-6',
+        proposal.status === 'pending' && 'border-brand/40',
+        fresh && 'ring-2 ring-brand ring-offset-2',
+      )}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge tone={status.tone}>{status.label}</Badge>
             <Badge tone="muted">{proposalKindLabel[proposal.kind]}</Badge>
+            <ProposerBadge proposedBy={proposal.proposedBy} />
+            {fresh && <Badge tone="brand">방금 받은 제안</Badge>}
             <span className="font-display text-xs text-ink-500">#{proposal.id}</span>
           </div>
           <h3 className="mt-2 text-base font-semibold">{proposal.title}</h3>
@@ -186,8 +197,7 @@ function DecisionForm({
   if (!reviewable) {
     return (
       <p className="mt-2 rounded-square bg-sand-50 px-3 py-2 text-charcoal">
-        이 화면은 정적 데모라 결정할 수 없습니다. 로컬에서{' '}
-        <code className="font-mono">npm run dev:live</code>로 실행하면 승인·거절할 수 있습니다.
+        이 화면은 정적 스냅샷이라 결정할 수 없습니다. 라이브 서버에서 열면 승인·거절할 수 있습니다.
       </p>
     );
   }
@@ -241,4 +251,12 @@ function DecisionForm({
       </div>
     </div>
   );
+}
+
+/** 누가 제안했는지: 실시간 Claude, 녹화 응답, 외부 MCP 클라이언트 */
+function ProposerBadge({ proposedBy }: { proposedBy: string }) {
+  if (proposedBy.startsWith('claude:')) return <Badge tone="positive">Claude 실시간</Badge>;
+  if (proposedBy.startsWith('recorded:')) return <Badge tone="muted">녹화 응답</Badge>;
+  if (proposedBy === 'mcp-client') return <Badge tone="neutral">MCP 클라이언트</Badge>;
+  return <Badge tone="muted">{proposedBy}</Badge>;
 }

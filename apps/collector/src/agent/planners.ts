@@ -61,9 +61,13 @@ const SYSTEM_PROMPT = `당신은 소셜 콘텐츠 수집 운영 에이전트의 
 - 확실한 근거가 없으면 제안하지 않는다. 제안이 없으면 빈 배열을 돌려준다.
 - 한국어로 쓴다.`;
 
-export function claudePlanner(options: { client?: Anthropic; model?: string } = {}): Planner {
-  const client = options.client ?? new Anthropic();
+export function claudePlanner(
+  options: { client?: Anthropic; model?: string; effort?: 'low' | 'medium' | 'high' } = {},
+): Planner {
+  // 라이브 데모에서 심사자가 기다리는 시간을 줄이려고 요청 시간 상한을 둔다
+  const client = options.client ?? new Anthropic({ timeout: 120_000, maxRetries: 1 });
   const model = options.model ?? 'claude-opus-5-5';
+  const effort = options.effort ?? 'high';
 
   return {
     id: `claude:${model}`,
@@ -74,7 +78,7 @@ export function claudePlanner(options: { client?: Anthropic; model?: string } = 
         // 안전 분류기가 거절하면 서버가 다른 모델로 이어서 처리한다 (기본 라우팅)
         betas: ['server-side-fallback-2026-07-01'],
         fallbacks: 'default',
-        output_config: { effort: 'high', format: betaZodOutputFormat(plannerOutputSchema) },
+        output_config: { effort, format: betaZodOutputFormat(plannerOutputSchema) },
         system: SYSTEM_PROMPT,
         messages: [
           {

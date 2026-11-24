@@ -32,8 +32,9 @@ apps/collector   수집 에이전트 (Node 22, TS, better-sqlite3, zod, MCP SDK,
   src/demo/          문서 기반 픽스처와 데모 시나리오
   src/agent/         관찰 → LLM 제안 → 가드 → 사람의 결정 → 실행 (docs/decisions/0003)
   src/mcp.ts         MCP 서버 (조회·관찰·제안. 승인 도구 없음)
-  src/serve.ts       로컬 검토 API (127.0.0.1 전용)
-apps/web         스냅샷 뷰어 + 제안 검토 화면 (React 19, Vite, Tailwind v4)
+  src/live/          라이브 데모 서버: 웹 + API, 방문자별 샌드박스, Claude 호출 예산 (docs/decisions/0005)
+apps/web         개요·수집·운영·제안 검토 화면 (React 19, Vite, Tailwind v4)
+Dockerfile, render.yaml  라이브 데모 배포
 docs/decisions/  결정 기록
 legacy/          원본 (git 제외)
 ```

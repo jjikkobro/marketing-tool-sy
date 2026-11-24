@@ -7,7 +7,7 @@ export default defineConfig({
   base: process.env.VITE_BASE ?? '/',
   plugins: [react(), tailwindcss()],
   server: {
-    // npm run dev:live 일 때 collector 검토 API로 보낸다. API가 없으면 웹은 정적 스냅샷(읽기 전용)으로 동작한다.
+    // npm run dev:live 일 때 collector 라이브 서버로 보낸다. API가 없으면 웹은 정적 스냅샷(읽기 전용)으로 동작한다.
     proxy: { '/api': 'http://127.0.0.1:8787' },
   },
 });

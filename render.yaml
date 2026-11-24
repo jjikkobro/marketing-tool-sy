@@ -1,0 +1,22 @@
+# Render Blueprint: README의 "Deploy to Render" 버튼이 이 파일을 읽는다.
+# 배포 후 Render 대시보드에서 ANTHROPIC_API_KEY만 입력하면 Claude 실시간 계획이 켜진다.
+services:
+  - type: web
+    name: social-collector
+    runtime: docker
+    # free는 15분 동안 요청이 없으면 잠들고, 깨어나는 데 1분 정도 걸린다. 제출 기간에는 starter를 권한다.
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CLAUDE_MODEL
+        value: claude-opus-5-5
+      - key: CLAUDE_EFFORT
+        value: medium
+      - key: CLAUDE_DAILY_LIMIT
+        value: '100'
+      - key: CLAUDE_PER_SESSION_LIMIT
+        value: '3'
+      - key: CLAUDE_MAX_CONCURRENT
+        value: '2'

@@ -48,7 +48,7 @@ export function ImpactPanel({ snapshot }: { snapshot: Snapshot }) {
           : '함께 쓰인 해시태그로 다음 탐색 후보를 찾음',
         `LLM 제안 ${proposals.length}건 중 ${blocked}건은 근거·수치가 틀려 사람에게 가기 전에 차단`,
       ],
-      link: { to: '/', label: '해시태그 보기' },
+      link: { to: '/discovery', label: '해시태그 보기' },
     },
   ];
 

@@ -25,7 +25,8 @@
     "format:check": "prettier --check .",
     "demo:agent": "npm run cli -w @studio/collector -- demo --scenario agent",
     "dev:live": "node scripts/dev-live.mjs",
-    "agent": "npm run agent -w @studio/collector --"
+    "agent": "npm run agent -w @studio/collector --",
+    "live": "npm run build && npm run live -w @studio/collector"
   },
   "devDependencies": {
     "prettier": "^3.10.1",

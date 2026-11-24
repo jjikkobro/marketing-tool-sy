@@ -13,6 +13,7 @@
  *   agent reject <id> --reviewer <이름> --note <사유> 사람이 거절
  *   agent ack <id> --reviewer <이름>                  운영 조치 제안 확인
  */
+import './env.ts';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';

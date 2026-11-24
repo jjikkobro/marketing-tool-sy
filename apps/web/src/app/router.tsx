@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router';
 import { AgentPage } from '../features/agent/AgentPage';
 import { DiscoveryPage } from '../features/discovery/DiscoveryPage';
+import { OverviewPage } from '../features/overview/OverviewPage';
 import { OperationsPage } from '../features/operations/OperationsPage';
 import { ProposalsPage } from '../features/proposals/ProposalsPage';
 import { AppShell } from './AppShell';
@@ -10,7 +11,8 @@ export const router = createBrowserRouter(
     {
       element: <AppShell />,
       children: [
-        { path: '/', element: <DiscoveryPage /> },
+        { path: '/', element: <OverviewPage /> },
+        { path: '/discovery', element: <DiscoveryPage /> },
         { path: '/operations', element: <OperationsPage /> },
         { path: '/proposals', element: <ProposalsPage /> },
         { path: '/agent', element: <AgentPage /> },
