@@ -21,6 +21,7 @@ interface ProposalRow {
   reviewed_at: string | null;
   result_run_id: number | null;
   execution_error: string | null;
+  plan: string | null;
 }
 
 function toProposal(row: ProposalRow): Proposal {
@@ -44,6 +45,7 @@ function toProposal(row: ProposalRow): Proposal {
     reviewedAt: row.reviewed_at,
     resultRunId: row.result_run_id,
     executionError: row.execution_error,
+    plan: row.plan ? (JSON.parse(row.plan) as Proposal['plan']) : null,
   };
 }
 
@@ -55,8 +57,8 @@ export function insertProposal(
   const result = db
     .prepare(
       `INSERT INTO agent_proposal (kind, status, title, rationale, adapter_id, query_kind, query_value, run_id,
-                                   evidence, claims, checks, proposed_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                                   evidence, claims, checks, proposed_by, created_at, plan)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       draft.kind,
@@ -72,6 +74,7 @@ export function insertProposal(
       JSON.stringify(meta.checks),
       meta.proposedBy,
       meta.now.toISOString(),
+      draft.plan ? JSON.stringify(draft.plan) : null,
     );
   return getProposal(db, Number(result.lastInsertRowid));
 }

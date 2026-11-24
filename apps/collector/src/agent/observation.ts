@@ -5,7 +5,15 @@
  * 사람의 최근 결정(거절 사유 포함)도 함께 넘겨, 같은 제안을 반복하지 않게 한다 (피드백).
  */
 import type { Db } from '../db/database.ts';
-import { adapterHealth, getRun, listRuns, relatedHashtags, topHashtags } from '../queries/index.ts';
+import { FORMAT_LABEL, isFormatId } from '../core/format.ts';
+import {
+  adapterHealth,
+  formatStats,
+  getRun,
+  listRuns,
+  relatedHashtags,
+  topHashtags,
+} from '../queries/index.ts';
 import type { CollectionRun, Fact } from '../schema.ts';
 
 export const INSTAGRAM_HASHTAG_LIMIT = 30;
@@ -19,10 +27,19 @@ export interface RecentDecision {
   reason: string | null;
 }
 
+export interface OpenProposal {
+  proposalId: number;
+  kind: string;
+  title: string;
+  target: string | null;
+}
+
 export interface Observation {
   generatedAt: string;
   facts: Fact[];
   recentDecisions: RecentDecision[];
+  /** 이미 사람의 검토를 기다리는 제안. 같은 내용을 다시 내지 않도록 계획자에게 보여준다 */
+  openProposals: OpenProposal[];
 }
 
 /** null 값은 사실에 넣지 않는다. "모름"을 숫자로 바꾸지 않기 위해서다. */
@@ -76,6 +93,42 @@ function quotaFact(db: Db, now: Date): Fact {
   };
 }
 
+function formatFact(stat: { format: string; contents: number; totalViews: number | null }): Fact {
+  const label = isFormatId(stat.format) ? FORMAT_LABEL[stat.format] : stat.format;
+  return {
+    factId: `format:${stat.format}`,
+    description: `${label} 포맷 콘텐츠 (YouTube 제외 집계, 규칙 기반 분류)`,
+    values: defined({ contents: stat.contents, totalViews: stat.totalViews }),
+  };
+}
+
+/**
+ * YouTube 영상 하나. YouTube가 준 값 그대로이며, 다른 영상과 합친 값은 만들지 않는다 (정책 III.E.2, III.E.4.h).
+ */
+function youtubeVideoFact(db: Db, videoId: string): Fact | null {
+  const row = db
+    .prepare(
+      `SELECT caption, creator_handle, views, likes, comments FROM content
+        WHERE platform = 'youtube' AND platform_content_id = ?`,
+    )
+    .get(videoId) as
+    | {
+        caption: string;
+        creator_handle: string | null;
+        views: number | null;
+        likes: number | null;
+        comments: number | null;
+      }
+    | undefined;
+  return row
+    ? {
+        factId: `video:youtube:${videoId}`,
+        description: `YouTube 영상 "${row.caption.slice(0, 80)}" (${row.creator_handle ?? '채널 미상'}, YouTube 제공 값)`,
+        values: defined({ views: row.views, likes: row.likes, comments: row.comments }),
+      }
+    : null;
+}
+
 /**
  * factId 하나를 DB에서 직접 계산한다. 관찰 목록은 "상위 N개"로 잘려 있어서,
  * 그 밖으로 밀려난 근거를 가드가 "없는 사실"로 오판하지 않도록 쓴다.
@@ -113,6 +166,12 @@ export function factById(db: Db, factId: string, now: Date = new Date()): Fact |
         }
       : null;
   }
+  if (type === 'format') {
+    const stat = formatStats(db).find((f) => f.format === key);
+    return stat ? formatFact(stat) : null;
+  }
+  if (type === 'video' && key.startsWith('youtube:'))
+    return youtubeVideoFact(db, key.slice('youtube:'.length));
   if (type === 'adapter') {
     const health = adapterHealth(db).find((h) => h.adapterId === key);
     return health
@@ -133,6 +192,36 @@ export function factById(db: Db, factId: string, now: Date = new Date()): Fact |
   }
   if (factId === 'quota:instagram-hashtags') return quotaFact(db, now);
   return null;
+}
+
+function openProposals(db: Db): OpenProposal[] {
+  const rows = db
+    .prepare(
+      `SELECT id, kind, title, adapter_id, query_kind, query_value, run_id, json_extract(plan, '$.format') AS format
+         FROM agent_proposal WHERE status = 'pending' ORDER BY id DESC LIMIT 20`,
+    )
+    .all() as Array<{
+    id: number;
+    kind: string;
+    title: string;
+    adapter_id: string | null;
+    query_kind: string | null;
+    query_value: string | null;
+    run_id: number | null;
+    format: string | null;
+  }>;
+  return rows.map((row) => ({
+    proposalId: row.id,
+    kind: row.kind,
+    title: row.title,
+    target: row.query_value
+      ? `${row.adapter_id} ${row.query_kind}:${row.query_value}`
+      : row.run_id !== null
+        ? `run:${row.run_id}`
+        : row.format
+          ? `format:${row.format}`
+          : null,
+  }));
 }
 
 function recentDecisions(db: Db): RecentDecision[] {
@@ -192,6 +281,24 @@ export function buildObservation(db: Db, now: Date = new Date()): Observation {
     if (fact) facts.push(fact);
   }
 
+  for (const stat of formatStats(db)) facts.push(formatFact(stat));
+
+  const videos = db
+    .prepare(
+      `SELECT platform_content_id AS id FROM content WHERE platform = 'youtube'
+        ORDER BY views IS NULL, views DESC LIMIT 15`,
+    )
+    .all() as Array<{ id: string }>;
+  for (const video of videos) {
+    const fact = youtubeVideoFact(db, video.id);
+    if (fact) facts.push(fact);
+  }
+
   facts.push(quotaFact(db, now));
-  return { generatedAt: now.toISOString(), facts, recentDecisions: recentDecisions(db) };
+  return {
+    generatedAt: now.toISOString(),
+    facts,
+    recentDecisions: recentDecisions(db),
+    openProposals: openProposals(db),
+  };
 }

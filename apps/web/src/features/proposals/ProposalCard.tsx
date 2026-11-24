@@ -30,7 +30,10 @@ export function ProposalCard({
   error,
   onDecide,
 }: ProposalCardProps) {
-  const status = proposalStatusMeta[proposal.status];
+  const status =
+    proposal.kind === 'content_brief' && proposal.status === 'approved'
+      ? { label: '채택됨', tone: 'positive' as const }
+      : proposalStatusMeta[proposal.status];
   const failed = proposal.checks.filter((c) => !c.passed);
 
   return (
@@ -52,6 +55,7 @@ export function ProposalCard({
           </div>
           <h3 className="mt-2 text-base font-semibold">{proposal.title}</h3>
           <p className="mt-1 text-sm text-ink-600">{proposal.rationale}</p>
+          {proposal.plan && <PlanDetails plan={proposal.plan} />}
         </div>
         <Target proposal={proposal} />
       </div>
@@ -230,7 +234,7 @@ function DecisionForm({
               disabled={pending || noReviewer}
               onClick={() => onDecide('approve', note)}
             >
-              승인하고 실행
+              {proposal.kind === 'content_brief' ? '채택' : '승인하고 실행'}
             </Button>
             <Button
               size="sm"
@@ -259,4 +263,25 @@ function ProposerBadge({ proposedBy }: { proposedBy: string }) {
   if (proposedBy.startsWith('recorded:')) return <Badge tone="muted">녹화 응답</Badge>;
   if (proposedBy === 'mcp-client') return <Badge tone="neutral">MCP 클라이언트</Badge>;
   return <Badge tone="muted">{proposedBy}</Badge>;
+}
+
+/** 마케터가 채택 여부를 판단할 기획 내용 */
+function PlanDetails({ plan }: { plan: NonNullable<Proposal['plan']> }) {
+  const rows = [
+    ['포맷', plan.format],
+    ['첫 2초 훅', plan.hook],
+    ['산출물', plan.deliverable],
+    ['성공 기준 (채택 후)', plan.successCriteria],
+    ...(plan.brandRisk ? [['브랜드 위험 점검', plan.brandRisk]] : []),
+  ];
+  return (
+    <dl className="mt-3 grid gap-x-4 gap-y-1.5 rounded-square bg-sand-50 px-4 py-3 text-sm sm:grid-cols-[8rem_1fr]">
+      {rows.map(([label, value]) => (
+        <div key={label} className="contents">
+          <dt className="text-xs font-semibold text-ink-600">{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
 }

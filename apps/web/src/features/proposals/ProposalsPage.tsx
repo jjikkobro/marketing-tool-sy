@@ -90,7 +90,7 @@ export function ProposalsPage() {
       <PageHeader
         eyebrow="Agent"
         title="에이전트 제안 검토"
-        description="LLM이 다음 수집을 제안하면 가드가 근거와 수치를 SQL로 검증하고, 사람이 승인해야만 실행합니다."
+        description="Claude가 기획안과 수집 제안을 내면, 검증기가 근거와 숫자를 데이터베이스 값과 대조하고, 사람이 채택·승인해야만 반영됩니다."
         actions={
           snapshot.data && (
             <SnapshotBadge

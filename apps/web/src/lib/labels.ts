@@ -4,6 +4,7 @@ import type { BadgeTone } from '../components/ui/Badge';
 export const platformLabel: Record<Platform, string> = {
   tiktok: 'TikTok',
   instagram: 'Instagram',
+  youtube: 'YouTube',
   web: 'Web',
 };
 
@@ -28,5 +29,6 @@ export const errorKindLabel: Record<ErrorKind, string> = {
   invalid_response: '응답 형식',
   schema_drift: '구조 변화',
   truncated: '잘림',
+  quota_exhausted: '쿼터 소진',
   unknown: '기타',
 };

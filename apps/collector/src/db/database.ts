@@ -20,6 +20,12 @@ export function openDatabase(path: string): Db {
   return db;
 }
 
+/**
+ * 마이그레이션은 외래키 검사를 끈 상태로 한 트랜잭션에서 적용하고, 끝난 뒤 foreign_key_check로 무결성을 확인한다.
+ * SQLite는 CHECK 제약을 ALTER로 바꿀 수 없어 테이블을 다시 만들어야 하는데(공식 12단계 절차),
+ * 그 과정에서 참조 중인 테이블을 잠시 지우려면 외래키 검사를 꺼야 하기 때문이다.
+ * PRAGMA foreign_keys는 트랜잭션 안에서 바꿀 수 없으므로 트랜잭션 밖에서 끄고 켠다.
+ */
 export function migrate(db: Db): void {
   const current = db.pragma('user_version', { simple: true }) as number;
   const files = readdirSync(MIGRATIONS_DIR)
@@ -30,9 +36,16 @@ export function migrate(db: Db): void {
     const version = Number(file.slice(0, 3));
     if (version <= current) continue;
     const sql = readFileSync(join(MIGRATIONS_DIR, file), 'utf8');
-    db.transaction(() => {
-      db.exec(sql);
-      db.pragma(`user_version = ${version}`);
-    })();
+    db.pragma('foreign_keys = OFF');
+    try {
+      db.transaction(() => {
+        db.exec(sql);
+        const broken = db.pragma('foreign_key_check') as unknown[];
+        if (broken.length > 0) throw new Error(`${file}: 외래키 무결성 위반 ${broken.length}건`);
+        db.pragma(`user_version = ${version}`);
+      })();
+    } finally {
+      db.pragma('foreign_keys = ON');
+    }
   }
 }

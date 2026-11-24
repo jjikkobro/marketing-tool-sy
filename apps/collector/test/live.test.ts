@@ -20,6 +20,7 @@ const draft = {
   queryKind: null,
   queryValue: null,
   runId: null,
+  plan: null,
   evidence: ['quota:instagram-hashtags'],
   claims: [],
 } as const;

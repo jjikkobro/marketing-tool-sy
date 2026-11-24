@@ -103,7 +103,14 @@ export function ContentTable({ contents, hashtag, recorded }: ContentTableProps)
                     )}
                   </div>
                   <p className="mt-1.5 line-clamp-2">{content.caption || '(캡션 없음)'}</p>
-                  {content.url && <SourceLink url={content.url} recorded={recorded} />}
+                  {content.url && (
+                    // YouTube는 실제 API로 받은 데이터라 항상 원본으로 연결한다 (정책 III.I.4: 링크를 제거하지 않는다)
+                    <SourceLink
+                      url={content.url}
+                      recorded={recorded && content.platform !== 'youtube'}
+                      youtube={content.platform === 'youtube'}
+                    />
+                  )}
                 </td>
                 <MetricCell value={content.metrics.views} />
                 <MetricCell value={content.metrics.likes} />
@@ -140,7 +147,15 @@ function MetricCell({ value }: { value: number | null }) {
  * 원본 링크. 녹화 데이터의 URL(가상 계정·가상 게시물)은 열어도 없는 페이지라,
  * 클릭할 수 있게 두면 고장 난 것처럼 보인다. 그래서 링크 대신 "어떤 URL로 저장되는지"만 보여준다.
  */
-function SourceLink({ url, recorded }: { url: string; recorded: boolean }) {
+function SourceLink({
+  url,
+  recorded,
+  youtube = false,
+}: {
+  url: string;
+  recorded: boolean;
+  youtube?: boolean;
+}) {
   if (recorded) {
     return (
       <p
@@ -161,7 +176,8 @@ function SourceLink({ url, recorded }: { url: string; recorded: boolean }) {
       rel="noopener noreferrer"
       className="mt-1 inline-flex items-center gap-1 text-xs text-ink-600 hover:text-brand-700"
     >
-      원본 링크 <ExternalLink aria-hidden className="size-3" />
+      {youtube ? 'YouTube에서 보기 · YouTube 제공 데이터' : '원본 링크'}{' '}
+      <ExternalLink aria-hidden className="size-3" />
       <span className="sr-only">(새 창)</span>
     </a>
   );

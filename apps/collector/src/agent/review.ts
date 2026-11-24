@@ -157,7 +157,8 @@ export async function approve(
     });
   });
   const gated = decided(() => gate());
-  if (gated.status !== 'approved') return gated;
+  // 기획안은 수집을 실행하지 않는다. 마케터가 채택하면 승인 상태로 남아 실행 백로그가 된다.
+  if (gated.status !== 'approved' || proposal.kind === 'content_brief') return gated;
 
   try {
     const target = resolveTarget(db, proposal);

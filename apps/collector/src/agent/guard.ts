@@ -14,6 +14,7 @@
 import type { Db } from '../db/database.ts';
 import type { Fact, GuardCheck, ProposalDraft, QueryKind } from '../schema.ts';
 import { proposalDraftSchema } from '../schema.ts';
+import { YOUTUBE_DAILY_SEARCH_LIMIT, youtubeSearchesToday } from '../core/youtube-policy.ts';
 import {
   factById,
   INSTAGRAM_HASHTAG_LIMIT,
@@ -25,6 +26,7 @@ import {
 export const AGENT_ADAPTERS: Record<string, readonly QueryKind[]> = {
   'tiktok-research': ['keyword', 'hashtag'],
   'instagram-graph': ['hashtag'],
+  'youtube-data': ['keyword', 'hashtag'],
 };
 
 const RECENT_COLLECTION_HOURS = 24;
@@ -66,12 +68,29 @@ const asTag = (value: string) => value.replace(/\s+/g, '');
 function normalizeDraft(draft: ProposalDraft): ProposalDraft {
   const text = { title: nfkc(draft.title).trim(), rationale: nfkc(draft.rationale).trim() };
   if (draft.kind === 'retry_run') {
-    return { ...draft, ...text, adapterId: null, queryKind: null, queryValue: null };
+    return { ...draft, ...text, adapterId: null, queryKind: null, queryValue: null, plan: null };
+  }
+  if (draft.kind === 'content_brief') {
+    // 기획안은 실행하지 않는다. 실행 대상 필드는 버리고, 포맷 이름은 소문자로 맞춘다
+    const plan = draft.plan && {
+      ...draft.plan,
+      format: nfkc(draft.plan.format).trim().toLowerCase(),
+    };
+    return {
+      ...draft,
+      ...text,
+      adapterId: null,
+      queryKind: null,
+      queryValue: null,
+      runId: null,
+      plan,
+    };
   }
   return {
     ...draft,
     ...text,
     runId: draft.kind === 'collect_query' ? null : draft.runId,
+    plan: null,
     queryValue:
       draft.queryValue !== null && draft.queryKind !== null
         ? normalizeQueryValue(draft.queryKind, draft.queryValue)
@@ -82,6 +101,9 @@ function normalizeDraft(draft: ProposalDraft): ProposalDraft {
 /* ── 문장 속 숫자 ───────────────────────────────────────────────── */
 
 const RUN_REFERENCE = /(?:실행|run)\s*#(\d+)/giu;
+/** 기획 사양 칸에서 막는 "데이터처럼 보이는 숫자": 조회·좋아요·건·명·회 같은 측정 단위가 붙은 수 */
+const DATA_COUNT =
+  /\d[\d,.]*\s*(?:회|건|명|뷰|views?|likes?|comments?)|(?:조회|좋아요|댓글|저장|공유|팔로워)\D{0,4}\d/iu;
 /** 문자로 시작하는 해시태그만 지운다. "#240%"나 "#1위"처럼 #으로 숫자를 숨기는 것은 숫자로 본다. */
 const WORD_HASHTAG = /#[\p{L}_][\p{L}\p{N}_]*/gu;
 /** 숫자 뒤에 붙으면 다른 값으로 바뀌는 단위·비율 표현. 이런 값은 SQL이 계산한 적이 없다. */
@@ -199,14 +221,44 @@ function checkClaims(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck
  * "인용한 사실의 아무 필드 값"까지 허용하던 이전 규칙은 다른 필드·다른 사실의 숫자를 빌려 쓰는 우회를 허용했다.
  */
 function checkGroundedNumbers(draft: ProposalDraft): GuardCheck {
-  const scan = scanNumbers(`${draft.title} ${draft.rationale}`);
+  const allowed = new Set(draft.claims.map((claim) => claim.value));
   const problems: string[] = [];
+
+  // 1) 제목·근거 문장: 숫자는 검증된 claims 값만 쓸 수 있다
+  const scan = scanNumbers(`${draft.title} ${draft.rationale}`);
   if (scan.derived) problems.push(`단위 변환·비율 표현은 쓸 수 없음: "${scan.derived}"`);
   if (scan.koreanNumeral) problems.push(`한글로 쓴 수는 검증할 수 없음: "${scan.koreanNumeral}"`);
-
-  const allowed = new Set(draft.claims.map((claim) => claim.value));
   const ungrounded = [...new Set(scan.numbers.filter((n) => !allowed.has(n)))];
   if (ungrounded.length > 0) problems.push(`claims에 없는 숫자: ${ungrounded.join(', ')}`);
+
+  // 2) 기획안 사양 칸(훅·산출물·성공 기준·브랜드 위험): "첫 2초", "1편", "1인분", "D+7" 같은 제작 사양은
+  //    데이터 주장이 아니다. 사양 단위를 하나씩 허용하던 방식은 실제 Claude 출력("꿀팁 1가지", "1인분")에서
+  //    계속 새는 곳이 생겨, "데이터처럼 보이는 숫자만 막는다"로 원칙을 바꿨다 (0002 §8).
+  if (draft.plan) {
+    const planScan = scanNumbers(
+      [
+        draft.plan.hook,
+        draft.plan.deliverable,
+        draft.plan.successCriteria,
+        draft.plan.brandRisk ?? '',
+      ].join(' '),
+    );
+    const planText = nfkc(
+      [
+        draft.plan.hook,
+        draft.plan.deliverable,
+        draft.plan.successCriteria,
+        draft.plan.brandRisk ?? '',
+      ].join(' '),
+    ).replace(WORD_HASHTAG, ' ');
+    if (planScan.derived) problems.push(`기획 사양에 단위 변환·비율 표현: "${planScan.derived}"`);
+    if (planScan.koreanNumeral)
+      problems.push(`기획 사양에 한글로 쓴 수: "${planScan.koreanNumeral}"`);
+    const dataCount = DATA_COUNT.exec(planText)?.[0];
+    if (dataCount) problems.push(`기획 사양에 데이터 수치처럼 보이는 숫자: "${dataCount}"`);
+    const large = [...new Set(planScan.numbers.filter((n) => n >= 100 && !allowed.has(n)))];
+    if (large.length > 0) problems.push(`기획 사양에 claims에 없는 큰 숫자: ${large.join(', ')}`);
+  }
 
   const citedRuns = new Set(
     draft.evidence.filter((id) => id.startsWith('run:')).map((id) => Number(id.slice(4))),
@@ -216,7 +268,11 @@ function checkGroundedNumbers(draft: ProposalDraft): GuardCheck {
     problems.push(`근거로 인용하지 않은 실행 번호: #${unknownRuns.join(', #')}`);
 
   return problems.length === 0
-    ? { check: 'grounded_numbers', passed: true, detail: '문장 속 숫자가 모두 검증된 claims 값' }
+    ? {
+        check: 'grounded_numbers',
+        passed: true,
+        detail: '문장 속 숫자가 검증된 claims 값이거나 제작 사양',
+      }
     : { check: 'grounded_numbers', passed: false, detail: problems.join(' / ') };
 }
 
@@ -248,6 +304,14 @@ function checkTarget(draft: ProposalDraft): GuardCheck {
       ? pass(`재실행 대상 #${draft.runId}이 근거에 있음`)
       : fail(`재실행 대상 run:${draft.runId}이 근거에 없습니다`);
   }
+  if (draft.kind === 'content_brief') {
+    if (!draft.plan) return fail('기획안에는 plan(포맷·훅·산출물·성공 기준)이 있어야 합니다');
+    return draft.evidence.includes(`format:${draft.plan.format}`)
+      ? pass(`기획 포맷 "${draft.plan.format}"이 근거에 있음`)
+      : fail(
+          `기획 포맷 "${draft.plan.format}"의 근거(format:${draft.plan.format})를 인용하지 않았습니다`,
+        );
+  }
   return pass('실행 대상 없음 (운영 조치)');
 }
 
@@ -260,6 +324,9 @@ function checkCapability(db: Db, draft: ProposalDraft): GuardCheck {
     }
     const supported = AGENT_ADAPTERS[draft.adapterId];
     if (!supported) return fail(`에이전트가 실행할 수 없는 어댑터: ${draft.adapterId}`);
+    if (draft.adapterId === 'youtube-data' && !process.env.YOUTUBE_API_KEY) {
+      return fail('YouTube API 키가 설정되지 않아 실행할 수 없습니다');
+    }
     if (!supported.includes(draft.queryKind)) {
       return fail(
         `${draft.adapterId}는 ${draft.queryKind} 검색을 지원하지 않습니다 (지원: ${supported.join(', ')})`,
@@ -303,6 +370,10 @@ function checkCapability(db: Db, draft: ProposalDraft): GuardCheck {
     };
   }
 
+  if (draft.kind === 'content_brief') {
+    return { check: 'capability', passed: true, detail: '실행 없이 마케터가 채택·거절하는 기획안' };
+  }
+
   // operator_action은 실행하지 않고 사람에게 알리기만 한다
   return draft.adapterId || draft.queryValue
     ? fail('운영 조치 제안에는 실행 대상(어댑터·쿼리)을 넣지 않습니다')
@@ -331,6 +402,67 @@ function checkDuplicate(
     title: draft.title,
     excludeId: options.excludeProposalId ?? null,
   };
+
+  // 운영 조치는 제목이 달라도 같은 실행을 근거로 들면 같은 조치로 본다 (실제 Claude가 표현만 바꿔 다시 낸 일이 있었다)
+  if (draft.kind === 'operator_action') {
+    const cited = draft.evidence.filter((id) => id.startsWith('run:') || id.startsWith('adapter:'));
+    const overlap = db
+      .prepare(
+        `SELECT id, evidence FROM agent_proposal
+          WHERE kind = 'operator_action' AND status = 'pending' AND id <> COALESCE(?, -1)`,
+      )
+      .all(options.excludeProposalId ?? null) as Array<{ id: number; evidence: string }>;
+    const hit = overlap.find((row) =>
+      (JSON.parse(row.evidence) as string[]).some((id) => cited.includes(id)),
+    );
+    if (hit) {
+      return {
+        check: 'duplicate',
+        passed: false,
+        detail: `같은 근거를 든 운영 조치 #${hit.id}이 이미 검토 중입니다`,
+      };
+    }
+  }
+
+  // 기획안의 정체는 포맷이다. 실행 대상 필드가 모두 비어 있어서 아래의 범용 검사로 보면 모든 기획안이
+  // 서로 같은 대상이 된다 (실제 Claude 실행에서 다른 포맷 기획안이 중복으로 막힌 일이 있었다, 0002 §8).
+  if (draft.kind === 'content_brief') {
+    if (!draft.plan) return { check: 'duplicate', passed: true, detail: '해당 없음' };
+    const sameFormat = db
+      .prepare(
+        `SELECT id FROM agent_proposal
+          WHERE kind = 'content_brief' AND status = 'pending' AND json_extract(plan, '$.format') = ?
+            AND id <> COALESCE(?, -1)`,
+      )
+      .get(draft.plan.format, options.excludeProposalId ?? null) as { id: number } | undefined;
+    if (sameFormat) {
+      return {
+        check: 'duplicate',
+        passed: false,
+        detail: `같은 포맷의 기획안 #${sameFormat.id}이 이미 검토 중입니다`,
+      };
+    }
+    const since = new Date(now.getTime() - REJECTION_MEMORY_DAYS * 86_400_000).toISOString();
+    const rejected = db
+      .prepare(
+        `SELECT id, review_note FROM agent_proposal
+          WHERE kind = 'content_brief' AND status = 'rejected' AND reviewed_at >= ?
+            AND json_extract(plan, '$.format') = ?
+          ORDER BY id DESC LIMIT 1`,
+      )
+      .get(since, draft.plan.format) as { id: number; review_note: string } | undefined;
+    return rejected
+      ? {
+          check: 'duplicate',
+          passed: false,
+          detail: `마케터가 ${REJECTION_MEMORY_DAYS}일 안에 거절한 포맷입니다 (#${rejected.id}: ${rejected.review_note})`,
+        }
+      : {
+          check: 'duplicate',
+          passed: true,
+          detail: '검토 중이거나 최근 거절된 같은 포맷 기획안 없음',
+        };
+  }
 
   const open = db
     .prepare(
@@ -392,6 +524,20 @@ function checkDuplicate(
 }
 
 function checkQuota(db: Db, draft: ProposalDraft, now: Date): GuardCheck {
+  if (draft.kind === 'collect_query' && draft.adapterId === 'youtube-data') {
+    const used = youtubeSearchesToday(db, now);
+    return used < YOUTUBE_DAILY_SEARCH_LIMIT
+      ? {
+          check: 'quota',
+          passed: true,
+          detail: `YouTube 검색 오늘 ${used}/${YOUTUBE_DAILY_SEARCH_LIMIT}회 (태평양 시간 기준)`,
+        }
+      : {
+          check: 'quota',
+          passed: false,
+          detail: `YouTube 오늘 검색 한도 도달 (${used}/${YOUTUBE_DAILY_SEARCH_LIMIT}회)`,
+        };
+  }
   if (
     draft.kind !== 'collect_query' ||
     draft.adapterId !== 'instagram-graph' ||

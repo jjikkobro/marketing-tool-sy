@@ -39,6 +39,7 @@ const valid: ProposalDraft = {
   queryKind: 'hashtag',
   queryValue: 'asmr',
   runId: null,
+  plan: null,
   evidence: ['related:mukbang>asmr'],
   claims: [{ factId: 'related:mukbang>asmr', field: 'contents', value: 12 }],
 };
@@ -131,10 +132,11 @@ describe('가드: 할루시네이션 차단', () => {
     ]);
   });
 
-  it('녹화된 계획 응답 6개 중 할루시네이션 3개를 정확히 막는다', async () => {
+  it('녹화된 계획 응답 7개(기획안 1개 포함) 중 할루시네이션 3개를 정확히 막는다', async () => {
     const db = await seeded();
     const results = await planAndGuard(db, recordedPlanner(), now);
     expect(results.map((r) => r.proposal?.status)).toEqual([
+      'pending',
       'pending',
       'pending',
       'pending',
@@ -142,7 +144,7 @@ describe('가드: 할루시네이션 차단', () => {
       'blocked',
       'blocked',
     ]);
-    expect(RECORDED_PROPOSALS).toHaveLength(6);
+    expect(RECORDED_PROPOSALS).toHaveLength(7);
   });
 });
 

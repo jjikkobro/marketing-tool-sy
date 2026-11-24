@@ -9,6 +9,7 @@
  */
 import { detectDrift, fieldFillRates } from '../core/drift.ts';
 import { contentKey } from '../core/identity.ts';
+import { purgeExpiredYouTube } from '../core/youtube-policy.ts';
 import { defaultSleep, RetryExhaustedError, withRetry, type RetryOptions } from '../core/retry.ts';
 import type { SourceAdapter } from '../adapters/types.ts';
 import type { Db } from '../db/database.ts';
@@ -51,6 +52,9 @@ export async function runCollection(
 ): Promise<RunResult> {
   const now = options.now ?? (() => new Date());
   const maxPages = options.maxPages ?? 10;
+  // YouTube 정책 III.E.4: 저장 30일이 지난 데이터는 갱신하거나 지운다. 수집할 때마다 먼저 정리한다.
+  if (adapter.platform === 'youtube') purgeExpiredYouTube(db, now());
+
   const runId = startRun(db, {
     adapterId: adapter.id,
     platform: adapter.platform,

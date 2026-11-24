@@ -3,7 +3,7 @@
 > 이 프로젝트를 맡는 모든 에이전트와 사람이 함께 보는 단일 현황판이다.
 > 작업 전에 읽고, 작업 후 갱신해서 **같은 커밋에** 포함한다. 규칙은 [AGENTS.md](AGENTS.md)에 있다.
 
-- **현재 단계**: v0.3 — 레드팀 검토 대응 완료 (가드 8검사, CSRF 방어, 조건부 상태 전이, 주기 계획·피드백) → 지원자 검토·서명, Pages 활성화
+- **현재 단계**: v0.4 — 라이브 데모(Claude 실시간, 방문자 샌드박스), YouTube 실제 수집, 마케터용 기획안 → 지원자: YouTube 키 발급, Render 배포, 영상·서명
 - **마지막 갱신**: 2026-11-24 · Claude Code (Opus 5.5)
 - **저장소**: https://github.com/jjikkobro/marketing-tool-sy
 
@@ -40,7 +40,10 @@
 ## 3. 작업 보드
 
 ### 지원자가 직접 해야 할 일 (에이전트가 대신할 수 없음)
-0. [ ] **GitHub Pages 활성화**: 저장소 Settings → Pages → Source를 "GitHub Actions"로 변경 → Actions에서 "Deploy to GitHub Pages" 재실행. 주소: https://jjikkobro.github.io/marketing-tool-sy/
+0-1. [ ] **YouTube API 키 발급**: Google Cloud Console → YouTube Data API v3 사용 설정 → API 키 → `apps/collector/.env`의 YOUTUBE_API_KEY. 받으면 실제 수집을 검증한다 (아직 미검증)
+0-2. [ ] **Render 배포**: README의 Deploy to Render → ANTHROPIC_API_KEY, YOUTUBE_API_KEY 입력. 제출 기간에는 starter 플랜(잠들지 않음) 권장. 배포 주소를 README 상단에 추가
+0-3. [ ] `apps/web/.env`의 키 삭제 (키는 `apps/collector/.env`로 옮겼다)
+0. [ ] (선택) **GitHub Pages 활성화**: 저장소 Settings → Pages → Source를 "GitHub Actions"로 변경 → Actions에서 "Deploy to GitHub Pages" 재실행. 주소: https://jjikkobro.github.io/marketing-tool-sy/
 1. [ ] `docs/decisions/0001`의 "지원자 확인" 4항목을 점검하고 서명한다
 2. [ ] README §1의 운영 경험 서술이 사실과 맞는지 확인한다 (운영 기간, 실제 겪은 장애). 다르면 고친다
 3. [ ] README ①~④를 **본인 문장으로** 다듬는다. AI 초안을 그대로 내지 않는다
@@ -84,7 +87,10 @@
 | 11-24 | 에이전트 루프 추가: LLM은 제안만, 숫자는 SQL, 결정은 사람 | 0003 (자기 평가: 이전 버전은 에이전트가 아니었음) |
 | 11-24 | 로컬 검토 API 추가 (0001의 "HTTP 서버 없음"을 뒤집음) | 0003 (사람의 확인 화면에 쓰기 경로 필요, 127.0.0.1 한정) |
 | 11-24 | 레드팀 우회 대응: target 검사, 숫자는 claims 값만, CSRF 4중 방어, 조건부 전이, 거절 기억 | 0004 |
-| 11-24 | 배포는 GitHub Pages (Vercel 아님) | 계정 연동 없이 저장소 워크플로만으로 배포 가능. 정적 스냅샷이라 서버 불필요 |
+| 11-24 | 시뮬레이션 30회 → S4(라이브 + 얇은 기획 층) 채택, 원본 기능 전면 이식 기각 | 0005 |
+| 11-24 | YouTube 재도입(0001 뒤집기): 주력이 아닌 "실제 동작 증거", 정책(30일·집계 금지·쿼터)을 코드로 | 0005 |
+| 11-24 | 라이브 데모는 Render(Docker). GitHub Pages는 읽기 전용 보조 | 0005 |
+| 11-24 | 배포는 GitHub Pages (Vercel 아님) → 0005에서 Render로 변경 | 계정 연동 없이 저장소 워크플로만으로 배포 가능. 정적 스냅샷이라 서버 불필요 |
 
 ## 5. 면접 예상 질문 (토론에서 면접관 역할이 뽑은 질문)
 
@@ -98,6 +104,19 @@
 ## 6. 인계 로그
 
 새 항목을 맨 위에 추가한다.
+
+### 2026-11-24 (6) · Claude Code (Opus 5.5)
+- **한 일**
+  - 페르소나 5 × 전략 6 시뮬레이션 30회로 전략을 정했다 (0005)
+  - 라이브 서버: 방문자 샌드박스, Claude 예산, 개요 화면, Dockerfile, render.yaml
+  - YouTube 어댑터와 정책 준수 (30일 삭제, 집계 제외, 하루 검색 상한)
+  - 마케터용 기획안(content_brief)과 포맷 분류, 마이그레이션 004
+  - 실제 Claude 6회 호출로 문제 5건을 찾아 수정 (0002 §8)
+- **확인**
+  - 테스트 109개 이상 통과
+  - 실제 Claude 마지막 실행: 22초, 4건 모두 통과, 기획안 채택 → 수집 실행 없음
+  - 기존 DB 사본에 마이그레이션 004를 적용해 데이터가 보존되는 것을 확인
+- **미검증**: 실제 YouTube 호출 (키 없음), Docker 이미지 (로컬 Docker 없음, CI에서 검증)
 
 ### 2026-11-24 (5) · Claude Code (Opus 5.5)
 - **한 일**: 지원자가 실제 Claude 계획자를 실행했다

@@ -15,6 +15,7 @@ export const proposalKindLabel: Record<Proposal['kind'], string> = {
   collect_query: '새 수집',
   retry_run: '재실행',
   operator_action: '운영 조치',
+  content_brief: '기획안',
 };
 
 export const guardCheckLabel: Record<GuardCheck['check'], string> = {

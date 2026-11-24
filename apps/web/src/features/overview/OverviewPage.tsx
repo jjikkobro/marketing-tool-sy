@@ -63,22 +63,21 @@ export function OverviewPage() {
           Social Collector
         </p>
         <h1 className="mt-3 text-3xl leading-snug font-bold tracking-tight">
-          TikTok·Instagram에서 다음에 볼 트렌드를 찾는
+          지금 뜨는 숏폼 포맷을 찾아
           <br />
-          <span className="text-brand-700">사람 승인형 수집 에이전트</span>
+          <span className="text-brand-700">근거가 검증된 기획안으로 만드는 에이전트</span>
         </h1>
         <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-ink-600">
-          브랜드 콘텐츠를 기획하는 사람이{' '}
-          <strong className="text-charcoal">
-            "지금 무엇이 뜨고, 다음에 무엇을 찾아봐야 하는가"
-          </strong>
-          를 믿을 수 있는 데이터로 얻게 합니다. AI는 다음 수집을 제안하고, 숫자는 데이터베이스가
-          검증하고, 실행은 사람이 승인합니다.
+          TikTok·Instagram·YouTube의 숏폼을 모아{' '}
+          <strong className="text-charcoal">어떤 포맷이 반응을 얻는지</strong> 보여주고, AI가 그
+          데이터로 콘텐츠 기획안을 씁니다. AI가 쓴 숫자는 데이터베이스 값과 대조해 틀리면 걸러내고,{' '}
+          <strong className="text-charcoal">무엇을 만들지는 마케터가 채택·거절로 결정</strong>
+          합니다.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
           <Button onClick={() => navigate('/proposals', { state: { autoPlan: canPlan } })}>
             <Bot aria-hidden className="size-4" />
-            {canPlan ? 'AI에게 다음 수집 제안 받아보기' : 'AI 제안 기록 보기'}
+            {canPlan ? 'AI 기획안 받아보기' : 'AI 기획안 보기'}
           </Button>
           <Button variant="secondary" onClick={() => navigate('/discovery')}>
             수집된 데이터 보기
@@ -133,14 +132,14 @@ export function OverviewPage() {
             />
             <TryStep
               n={2}
-              title="AI에게 다음 수집 제안 받기"
+              title="AI에게 기획안 받기"
               body={
                 canPlan
-                  ? 'Claude가 지금 이 데이터를 읽고 제안합니다 (보통 20~40초). 가드가 무엇을 통과시키고 무엇을 막는지 봅니다.'
+                  ? 'Claude가 지금 이 데이터를 읽고 기획안과 수집 제안을 씁니다 (보통 20~40초). 검증기가 무엇을 통과시키고 무엇을 막는지 봅니다.'
                   : 'AI 제안과 가드가 막은 이유를 봅니다.'
               }
               onClick={() => navigate('/proposals', { state: { autoPlan: canPlan } })}
-              cta={canPlan ? 'AI 제안 받기' : '제안 보기'}
+              cta={canPlan ? 'AI 기획안 받기' : '기획안 보기'}
             />
             <TryStep
               n={3}
@@ -160,6 +159,26 @@ export function OverviewPage() {
       </section>
 
       {snapshot.data && <ImpactPanel snapshot={snapshot.data.snapshot} />}
+
+      <section aria-labelledby="roles-heading" className="grid gap-3 md:grid-cols-2">
+        <h2 id="roles-heading" className="sr-only">
+          누가 무엇을 쓰나요
+        </h2>
+        <Card className="p-5">
+          <p className="text-sm font-semibold">마케터 → 이 웹 화면</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-600">
+            포맷과 근거 콘텐츠를 보고, AI 기획안을 채택·거절합니다. 거절 사유는 다음 기획에
+            반영됩니다. 설치할 것이 없습니다.
+          </p>
+        </Card>
+        <Card className="p-5">
+          <p className="text-sm font-semibold">엔지니어·AI 도구 → MCP</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-600">
+            Claude Code 같은 AI 도구가 같은 데이터를 조회하고 제안까지 할 수 있는 연결부입니다. 승인
+            도구는 없어서 결정은 항상 사람이 웹에서 합니다.
+          </p>
+        </Card>
+      </section>
 
       <section aria-labelledby="problem-heading">
         <h2 id="problem-heading" className="text-lg font-bold">

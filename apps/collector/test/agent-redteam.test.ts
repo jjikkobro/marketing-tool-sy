@@ -32,6 +32,7 @@ const base: ProposalDraft = {
   queryKind: 'hashtag',
   queryValue: 'asmr',
   runId: null,
+  plan: null,
   evidence: ['related:mukbang>asmr'],
   claims: [{ factId: 'related:mukbang>asmr', field: 'contents', value: 12 }],
 };
@@ -173,6 +174,24 @@ describe('레드팀: 실행 대상 우회', () => {
     expect(failed(db, fromClaude)).toContain('duplicate');
     const { proposal } = submitProposal(db, retry({ adapterId: 'instagram-graph' }), 'test', now);
     expect(proposal?.adapterId).toBeNull();
+  });
+
+  it('실제 Claude 출력 회귀: 운영 조치를 표현만 바꿔 다시 내도, 같은 근거를 들면 중복으로 막는다', async () => {
+    const db = await seeded();
+    const op = (title: string): ProposalDraft => ({
+      ...base,
+      kind: 'operator_action',
+      title,
+      rationale: '실행 #5가 토큰 만료로 실패했습니다.',
+      adapterId: null,
+      queryKind: null,
+      queryValue: null,
+      runId: null,
+      evidence: ['run:5', 'adapter:instagram-graph'],
+      claims: [],
+    });
+    submitProposal(db, op('Instagram 액세스 토큰 갱신 필요'), 'recorded', now);
+    expect(failed(db, op('instagram-graph 인증 토큰 상태 확인 및 갱신'))).toContain('duplicate');
   });
 
   it('사람이 거절한 대상은 같은 내용으로 다시 올라오지 않는다 (피드백)', async () => {

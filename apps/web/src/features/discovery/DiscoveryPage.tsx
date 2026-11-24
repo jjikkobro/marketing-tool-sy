@@ -5,6 +5,7 @@ import { SnapshotBadge } from '../../components/layout/SnapshotBadge';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { ErrorMessage, LoadingBlock } from '../../components/ui/StateMessage';
 import { ContentTable } from './ContentTable';
+import { FormatPanel } from './FormatPanel';
 import { HashtagPanel } from './HashtagPanel';
 import { ImpactPanel } from './ImpactPanel';
 import { RunSummaryStrip } from './RunSummaryStrip';
@@ -41,12 +42,15 @@ export function DiscoveryPage() {
             errors={snapshot.data.snapshot.errors}
           />
           <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
-            <HashtagPanel
-              hashtags={snapshot.data.snapshot.hashtags}
-              related={snapshot.data.snapshot.related}
-              selected={hashtag}
-              onSelect={setHashtag}
-            />
+            <div className="space-y-6">
+              <FormatPanel formats={snapshot.data.snapshot.formats} />
+              <HashtagPanel
+                hashtags={snapshot.data.snapshot.hashtags}
+                related={snapshot.data.snapshot.related}
+                selected={hashtag}
+                onSelect={setHashtag}
+              />
+            </div>
             <ContentTable
               contents={snapshot.data.snapshot.contents}
               hashtag={hashtag}

@@ -2,6 +2,7 @@ import { listProposals } from './agent/store.ts';
 import type { Db } from './db/database.ts';
 import {
   adapterHealth,
+  formatStats,
   listErrors,
   listRuns,
   relatedHashtags,
@@ -31,5 +32,6 @@ export function buildSnapshot(
         .map((tag) => [tag.hashtag, relatedHashtags(db, tag.hashtag, { limit: 8 })]),
     ),
     proposals: listProposals(db),
+    formats: formatStats(db),
   });
 }

@@ -6,7 +6,7 @@
  */
 import { z } from 'zod';
 
-export const platformSchema = z.enum(['tiktok', 'instagram', 'web']);
+export const platformSchema = z.enum(['tiktok', 'instagram', 'youtube', 'web']);
 export type Platform = z.infer<typeof platformSchema>;
 
 /** 어떤 경로로 수집했는지. 화면과 README에 출처 배지로 그대로 보여준다. */
@@ -65,6 +65,8 @@ export const errorKindSchema = z.enum([
   'invalid_response',
   'schema_drift',
   'truncated',
+  /** 하루 쿼터를 다 썼다. 재시도해도 다음 초기화 전까지는 실패하므로 재시도하지 않는다 */
+  'quota_exhausted',
   'unknown',
 ]);
 export type ErrorKind = z.infer<typeof errorKindSchema>;
@@ -149,8 +151,29 @@ export const factSchema = z.object({
 });
 export type Fact = z.infer<typeof factSchema>;
 
-export const proposalKindSchema = z.enum(['collect_query', 'retry_run', 'operator_action']);
+export const proposalKindSchema = z.enum([
+  'collect_query',
+  'retry_run',
+  'operator_action',
+  /** 마케터용 콘텐츠 기획안. 실행하지 않고 마케터가 채택·거절한다 */
+  'content_brief',
+]);
 export type ProposalKind = z.infer<typeof proposalKindSchema>;
+
+/** 기획안의 내용. 숫자는 쓰지 않는 것이 원칙이고, 쓰면 claims 값이어야 한다 (가드가 검사). */
+export const contentPlanSchema = z.object({
+  /** 근거로 인용한 format:* 사실의 포맷 이름 */
+  format: z.string().min(1).max(40),
+  /** 첫 2초 훅 */
+  hook: z.string().min(1).max(200),
+  /** 만들 산출물 (예: 15초 숏폼 1편 + 캡션) */
+  deliverable: z.string().min(1).max(200),
+  /** 채택 후 D+7에 무엇을 보고 성공으로 판단할지 */
+  successCriteria: z.string().min(1).max(200),
+  /** 브랜드 위험 점검 (예: 과도한 섭취 연출 금지) */
+  brandRisk: z.string().max(200).nullable(),
+});
+export type ContentPlan = z.infer<typeof contentPlanSchema>;
 
 /** LLM(또는 MCP 클라이언트)이 내는 제안 초안. 아직 아무것도 검증되지 않은 상태다. */
 export const proposalDraftSchema = z.object({
@@ -167,6 +190,8 @@ export const proposalDraftSchema = z.object({
   evidence: z.array(z.string()),
   /** 근거에서 인용한 수치. 가드가 SQL 값과 하나씩 대조한다. */
   claims: z.array(z.object({ factId: z.string(), field: z.string(), value: z.number() })),
+  /** content_brief 전용: 무엇을 어떻게 만들지. 다른 종류에서는 null */
+  plan: contentPlanSchema.nullable().default(null),
 });
 export type ProposalDraft = z.infer<typeof proposalDraftSchema>;
 
@@ -237,6 +262,14 @@ export const snapshotSchema = z.object({
   /** 상위 해시태그별 관련 해시태그 (queries/relatedHashtags 결과). 웹에서 다시 계산하지 않는다. */
   related: z.record(z.string(), z.array(hashtagStatSchema)),
   proposals: z.array(proposalSchema),
+  /** 포맷별 집계 (규칙 기반 분류, YouTube 제외) */
+  formats: z.array(
+    z.object({
+      format: z.string(),
+      contents: z.number().int(),
+      totalViews: z.number().int().nullable(),
+    }),
+  ),
 });
 export type Snapshot = z.infer<typeof snapshotSchema>;
 
@@ -250,7 +283,12 @@ export const liveStatusSchema = z.object({
     remainingToday: z.number().int(),
     remainingForSession: z.number().int(),
   }),
-  sns: z.enum(['recorded', 'live']),
+  /** 플랫폼별 수집 상태: live(실제 API), recorded(녹화 응답), off(키 없음) */
+  sources: z.object({
+    youtube: z.enum(['live', 'off']),
+    tiktok: z.enum(['live', 'recorded']),
+    instagram: z.enum(['live', 'recorded']),
+  }),
   browserSeeded: z.boolean(),
   sessionStartedAt: z.iso.datetime(),
 });

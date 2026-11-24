@@ -26,13 +26,20 @@ export function LiveStatusCard({
         },
         { label: '가드·승인·실행', value: '실시간 (내 샌드박스)', on: true, hint: null },
         {
-          label: 'SNS 응답',
-          value: live.sns === 'live' ? '실서비스 API' : '녹화된 가상 데이터',
-          on: live.sns === 'live',
-          hint:
-            live.sns === 'live'
-              ? null
-              : 'TikTok·Instagram 실제 API 권한이 없어 공식 응답 형식의 녹화본 사용',
+          label: 'YouTube 수집',
+          value:
+            live.sources.youtube === 'live' ? '실제 API 수집 (YouTube 제공)' : '꺼짐 (API 키 없음)',
+          on: live.sources.youtube === 'live',
+          hint: live.sources.youtube === 'live' ? '30일 보관·집계 제외 등 YouTube 정책 준수' : null,
+        },
+        {
+          label: 'TikTok·Instagram 수집',
+          value:
+            live.sources.tiktok === 'live' || live.sources.instagram === 'live'
+              ? '실서비스 API'
+              : '녹화된 가상 데이터',
+          on: live.sources.tiktok === 'live' || live.sources.instagram === 'live',
+          hint: '공식 API 권한(연구 승인·Meta 앱)이 필요해 공식 응답 형식의 녹화본 사용',
         },
       ]
     : [

@@ -2,6 +2,7 @@
  * 읽기 쿼리 모음. CLI, MCP 서버, 웹 export가 모두 이 함수만 쓴다.
  * 그래서 "AI가 보는 데이터"와 "사람이 보는 화면"이 항상 같은 SQL에서 나온다.
  */
+import { classifyFormat } from '../core/format.ts';
 import type { Db } from '../db/database.ts';
 import type {
   AdapterHealth,
@@ -85,6 +86,7 @@ export function topHashtags(db: Db, { limit = 15 } = {}): HashtagStat[] {
     .prepare(
       `SELECT tag.value AS hashtag, COUNT(*) AS contents, SUM(c.views) AS totalViews
          FROM content c, json_each(c.hashtags) tag
+        WHERE c.platform <> 'youtube' -- YouTube 정책 III.E.2: 소유자가 다른 API 데이터를 합치지 않는다
         GROUP BY tag.value
         ORDER BY contents DESC, totalViews DESC
         LIMIT ?`,
@@ -102,6 +104,7 @@ export function relatedHashtags(db: Db, seed: string, { limit = 10 } = {}): Hash
       `SELECT other.value AS hashtag, COUNT(*) AS contents, SUM(c.views) AS totalViews
          FROM content c, json_each(c.hashtags) seed, json_each(c.hashtags) other
         WHERE seed.value = ? AND other.value <> seed.value
+          AND c.platform <> 'youtube' -- YouTube 정책 III.E.2 (core/youtube-policy.ts)
         GROUP BY other.value
         ORDER BY contents DESC, totalViews DESC
         LIMIT ?`,
@@ -216,4 +219,28 @@ export function adapterHealth(db: Db): AdapterHealth[] {
     ...row,
     errorsByKind: JSON.parse(row.errorsByKind) as Record<string, number>,
   }));
+}
+
+/**
+ * 포맷별 콘텐츠 수와 조회 합계. 포맷은 캡션·해시태그로 결정적으로 분류한다 (core/format.ts).
+ * YouTube 데이터는 정책상 집계에서 뺀다.
+ */
+export function formatStats(
+  db: Db,
+): Array<{ format: string; contents: number; totalViews: number | null }> {
+  const rows = db
+    .prepare(`SELECT caption, hashtags, views FROM content WHERE platform <> 'youtube'`)
+    .all() as Array<{ caption: string; hashtags: string; views: number | null }>;
+  const stats = new Map<string, { contents: number; totalViews: number | null }>();
+  for (const row of rows) {
+    const format = classifyFormat(row.caption, JSON.parse(row.hashtags) as string[]);
+    const current = stats.get(format) ?? { contents: 0, totalViews: null };
+    stats.set(format, {
+      contents: current.contents + 1,
+      totalViews: row.views === null ? current.totalViews : (current.totalViews ?? 0) + row.views,
+    });
+  }
+  return [...stats.entries()]
+    .map(([format, stat]) => ({ format, ...stat }))
+    .sort((a, b) => b.contents - a.contents);
 }

@@ -32,7 +32,7 @@ export function PlanPanel({
   return (
     <Card className="flex flex-wrap items-center gap-x-6 gap-y-3 border-charcoal p-5">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">AI에게 다음 수집 제안 받기</p>
+        <p className="text-sm font-semibold">AI에게 기획안·수집 제안 받기</p>
         <p className="mt-0.5 text-xs text-ink-600">
           {!reviewable
             ? '정적 스냅샷에서는 실행할 수 없습니다. 아래는 이전 실행 기록입니다.'
