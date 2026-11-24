@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-24T08:05:54.353Z",
+  "generatedAt": "2026-11-24T08:20:04.347Z",
   "scenario": "agent",
   "dataMode": "recorded",
   "runs": [
@@ -13,8 +13,8 @@
         "value": "asmr"
       },
       "status": "succeeded",
-      "startedAt": "2026-11-24T08:05:53.870Z",
-      "finishedAt": "2026-11-24T08:05:53.870Z",
+      "startedAt": "2026-11-24T08:20:03.881Z",
+      "finishedAt": "2026-11-24T08:20:03.881Z",
       "pagesFetched": 1,
       "itemsSeen": 6,
       "inserted": 6,
@@ -33,8 +33,8 @@
         "value": "spicynoodlechallenge"
       },
       "status": "failed",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 1,
       "itemsSeen": 0,
       "inserted": 0,
@@ -53,8 +53,8 @@
         "value": "spicynoodlechallenge"
       },
       "status": "succeeded",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 1,
       "itemsSeen": 8,
       "inserted": 0,
@@ -73,8 +73,8 @@
         "value": "spicynoodlechallenge"
       },
       "status": "succeeded",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 1,
       "itemsSeen": 8,
       "inserted": 8,
@@ -93,8 +93,8 @@
         "value": "spicynoodlechallenge"
       },
       "status": "succeeded",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 1,
       "itemsSeen": 8,
       "inserted": 8,
@@ -113,8 +113,8 @@
         "value": "mukbang"
       },
       "status": "succeeded",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 2,
       "itemsSeen": 12,
       "inserted": 12,
@@ -133,8 +133,8 @@
         "value": "koreanramen"
       },
       "status": "failed",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 0,
       "itemsSeen": 0,
       "inserted": 0,
@@ -153,8 +153,8 @@
         "value": "fire noodle"
       },
       "status": "partial",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 2,
       "itemsSeen": 16,
       "inserted": 16,
@@ -173,8 +173,8 @@
         "value": "spicy noodle challenge"
       },
       "status": "succeeded",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 2,
       "itemsSeen": 14,
       "inserted": 0,
@@ -193,8 +193,8 @@
         "value": "spicynoodlechallenge"
       },
       "status": "succeeded",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 2,
       "itemsSeen": 11,
       "inserted": 11,
@@ -213,8 +213,8 @@
         "value": "spicy noodle challenge"
       },
       "status": "succeeded",
-      "startedAt": "2026-11-24T08:05:53.014Z",
-      "finishedAt": "2026-11-24T08:05:53.014Z",
+      "startedAt": "2026-11-24T08:20:03.115Z",
+      "finishedAt": "2026-11-24T08:20:03.115Z",
       "pagesFetched": 2,
       "itemsSeen": 16,
       "inserted": 14,
@@ -234,7 +234,7 @@
       "message": "1페이지 파싱 실패: 페이지에 블록 8개가 보이는데 카드 셀렉터(article.feed-card)가 0건입니다. 마크업이 바뀌었을 수 있습니다",
       "httpStatus": null,
       "attempt": null,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 12,
@@ -245,7 +245,7 @@
       "message": "'views' 필드 채움 비율 100% → 0%. 응답 구조가 바뀌었을 수 있습니다",
       "httpStatus": null,
       "attempt": null,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 11,
@@ -256,7 +256,7 @@
       "message": "'likes' 필드 채움 비율 91% → 0%. 응답 구조가 바뀌었을 수 있습니다",
       "httpStatus": null,
       "attempt": null,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 10,
@@ -267,7 +267,7 @@
       "message": "호출 한도 초과 (4): Application request limit reached → 250ms 후 재시도",
       "httpStatus": 400,
       "attempt": 1,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 9,
@@ -278,7 +278,7 @@
       "message": "페이지 상한(2)에 도달해 남은 결과를 가져오지 않았습니다",
       "httpStatus": null,
       "attempt": null,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 8,
@@ -286,10 +286,10 @@
       "stage": "parse",
       "kind": "invalid_response",
       "severity": "warning",
-      "message": "항목 제외: id 또는 create_time 없음 — {\"username\":\"demo_creator_11\",\"video_description\":\"Day 46 of the spicy noodle challenge #spicynoodlechallenge\",\"create_time\":1794679553,\"hashtag_names\":[\"spicyn…",
+      "message": "항목 제외: id 또는 create_time 없음 — {\"username\":\"demo_creator_11\",\"video_description\":\"Day 46 of the spicy noodle challenge #spicynoodlechallenge\",\"create_time\":1794680403,\"hashtag_names\":[\"spicyn…",
       "httpStatus": null,
       "attempt": null,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 7,
@@ -300,7 +300,7 @@
       "message": "영상 ID가 문서 필드 표의 `id`가 아니라 `video_id`로 왔습니다",
       "httpStatus": null,
       "attempt": null,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 6,
@@ -311,7 +311,7 @@
       "message": "1페이지 수집 중단: 액세스 토큰 만료 (190): Error validating access token: Session has expired.",
       "httpStatus": 400,
       "attempt": 1,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 5,
@@ -322,7 +322,7 @@
       "message": "3페이지 수집 중단: 서버 오류 (503)",
       "httpStatus": 503,
       "attempt": 4,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 4,
@@ -333,7 +333,7 @@
       "message": "서버 오류 (503) → 1000ms 후 재시도",
       "httpStatus": 503,
       "attempt": 3,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 3,
@@ -344,7 +344,7 @@
       "message": "서버 오류 (503) → 500ms 후 재시도",
       "httpStatus": 503,
       "attempt": 2,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 2,
@@ -355,7 +355,7 @@
       "message": "서버 오류 (503) → 250ms 후 재시도",
       "httpStatus": 503,
       "attempt": 1,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "id": 1,
@@ -366,7 +366,7 @@
       "message": "요청 한도 초과 (429) → 1000ms 후 재시도",
       "httpStatus": 429,
       "attempt": 1,
-      "createdAt": "2026-11-24T08:05:53.014Z"
+      "createdAt": "2026-11-24T08:20:03.115Z"
     }
   ],
   "health": [
@@ -379,7 +379,7 @@
       "partial": 0,
       "failed": 1,
       "lastStatus": "failed",
-      "lastFinishedAt": "2026-11-24T08:05:53.014Z",
+      "lastFinishedAt": "2026-11-24T08:20:03.115Z",
       "errorsByKind": {
         "schema_drift": 2
       }
@@ -393,7 +393,7 @@
       "partial": 0,
       "failed": 1,
       "lastStatus": "succeeded",
-      "lastFinishedAt": "2026-11-24T08:05:53.014Z",
+      "lastFinishedAt": "2026-11-24T08:20:03.115Z",
       "errorsByKind": {
         "auth": 1,
         "rate_limited": 1,
@@ -409,7 +409,7 @@
       "partial": 1,
       "failed": 0,
       "lastStatus": "succeeded",
-      "lastFinishedAt": "2026-11-24T08:05:53.870Z",
+      "lastFinishedAt": "2026-11-24T08:20:03.881Z",
       "errorsByKind": {
         "invalid_response": 1,
         "rate_limited": 1,
@@ -428,7 +428,7 @@
       "caption": "Day 45 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "spicyfood", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-14T23:05:53.000Z",
+      "publishedAt": "2026-11-14T23:20:03.000Z",
       "metrics": {
         "views": 188355,
         "likes": 7385,
@@ -437,8 +437,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -448,7 +448,7 @@
       "caption": "Day 22 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-19T18:05:53.000Z",
+      "publishedAt": "2026-11-19T18:20:03.000Z",
       "metrics": {
         "views": 186218,
         "likes": 14286,
@@ -457,8 +457,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -468,7 +468,7 @@
       "caption": "Day 44 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "spicyfood", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-15T04:05:53.000Z",
+      "publishedAt": "2026-11-15T04:20:03.000Z",
       "metrics": {
         "views": 180436,
         "likes": 6772,
@@ -477,8 +477,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -488,7 +488,7 @@
       "caption": "Day 21 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-19T23:05:53.000Z",
+      "publishedAt": "2026-11-19T23:20:03.000Z",
       "metrics": {
         "views": 178299,
         "likes": 13673,
@@ -497,8 +497,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -508,7 +508,7 @@
       "caption": "Day 43 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "spicyfood", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-15T09:05:53.000Z",
+      "publishedAt": "2026-11-15T09:20:03.000Z",
       "metrics": {
         "views": 172517,
         "likes": 6159,
@@ -517,8 +517,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -528,7 +528,7 @@
       "caption": "Day 20 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-20T04:05:53.000Z",
+      "publishedAt": "2026-11-20T04:20:03.000Z",
       "metrics": {
         "views": 170380,
         "likes": 13060,
@@ -537,8 +537,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -548,7 +548,7 @@
       "caption": "Day 42 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "spicyfood", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-15T14:05:53.000Z",
+      "publishedAt": "2026-11-15T14:20:03.000Z",
       "metrics": {
         "views": 164598,
         "likes": 5546,
@@ -557,8 +557,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -568,7 +568,7 @@
       "caption": "Day 41 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "spicyfood", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-15T19:05:53.000Z",
+      "publishedAt": "2026-11-15T19:20:03.000Z",
       "metrics": {
         "views": 156679,
         "likes": 4933,
@@ -577,8 +577,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -588,7 +588,7 @@
       "caption": "Day 40 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "spicyfood", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-16T00:05:53.000Z",
+      "publishedAt": "2026-11-16T00:20:03.000Z",
       "metrics": {
         "views": 148760,
         "likes": 4320,
@@ -597,8 +597,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -608,7 +608,7 @@
       "caption": "Day 14 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-21T10:05:53.000Z",
+      "publishedAt": "2026-11-21T10:20:03.000Z",
       "metrics": {
         "views": 123766,
         "likes": 9382,
@@ -617,8 +617,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -628,7 +628,7 @@
       "caption": "Day 13 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-21T15:05:53.000Z",
+      "publishedAt": "2026-11-21T15:20:03.000Z",
       "metrics": {
         "views": 115847,
         "likes": 8769,
@@ -637,8 +637,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -648,7 +648,7 @@
       "caption": "Day 35 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-17T01:05:53.000Z",
+      "publishedAt": "2026-11-17T01:20:03.000Z",
       "metrics": {
         "views": 109165,
         "likes": 1255,
@@ -657,8 +657,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -668,7 +668,7 @@
       "caption": "Day 12 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-21T20:05:53.000Z",
+      "publishedAt": "2026-11-21T20:20:03.000Z",
       "metrics": {
         "views": 107928,
         "likes": 8156,
@@ -677,8 +677,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -688,7 +688,7 @@
       "caption": "Day 34 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-17T06:05:53.000Z",
+      "publishedAt": "2026-11-17T06:20:03.000Z",
       "metrics": {
         "views": 101246,
         "likes": 21642,
@@ -697,8 +697,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -708,7 +708,7 @@
       "caption": "Day 11 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T01:05:53.000Z",
+      "publishedAt": "2026-11-22T01:20:03.000Z",
       "metrics": {
         "views": 100009,
         "likes": 7543,
@@ -717,8 +717,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -728,7 +728,7 @@
       "caption": "Day 33 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-17T11:05:53.000Z",
+      "publishedAt": "2026-11-17T11:20:03.000Z",
       "metrics": {
         "views": 93327,
         "likes": 21029,
@@ -737,8 +737,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -748,7 +748,7 @@
       "caption": "Day 10 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T06:05:53.000Z",
+      "publishedAt": "2026-11-22T06:20:03.000Z",
       "metrics": {
         "views": 92090,
         "likes": 6930,
@@ -757,8 +757,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -768,7 +768,7 @@
       "caption": "Day 32 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-17T16:05:53.000Z",
+      "publishedAt": "2026-11-17T16:20:03.000Z",
       "metrics": {
         "views": 85408,
         "likes": 20416,
@@ -777,8 +777,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -788,7 +788,7 @@
       "caption": "Day 9 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T11:05:53.000Z",
+      "publishedAt": "2026-11-22T11:20:03.000Z",
       "metrics": {
         "views": 84171,
         "likes": 6317,
@@ -797,8 +797,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -808,7 +808,7 @@
       "caption": "Day 31 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-17T21:05:53.000Z",
+      "publishedAt": "2026-11-17T21:20:03.000Z",
       "metrics": {
         "views": 77489,
         "likes": 19803,
@@ -817,8 +817,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -828,7 +828,7 @@
       "caption": "Day 8 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T16:05:53.000Z",
+      "publishedAt": "2026-11-22T16:20:03.000Z",
       "metrics": {
         "views": 76852,
         "likes": 5704,
@@ -837,8 +837,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -848,7 +848,7 @@
       "caption": "Day 30 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-18T02:05:53.000Z",
+      "publishedAt": "2026-11-18T02:20:03.000Z",
       "metrics": {
         "views": 69570,
         "likes": 19190,
@@ -857,8 +857,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -868,7 +868,7 @@
       "caption": "Day 7 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T21:05:53.000Z",
+      "publishedAt": "2026-11-22T21:20:03.000Z",
       "metrics": {
         "views": 68933,
         "likes": 5091,
@@ -877,8 +877,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -888,7 +888,7 @@
       "caption": "Day 52 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-13T12:05:53.000Z",
+      "publishedAt": "2026-11-13T12:20:03.000Z",
       "metrics": {
         "views": 63788,
         "likes": 11676,
@@ -897,8 +897,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -908,7 +908,7 @@
       "caption": "Day 29 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-18T07:05:53.000Z",
+      "publishedAt": "2026-11-18T07:20:03.000Z",
       "metrics": {
         "views": 61651,
         "likes": 18577,
@@ -917,8 +917,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -928,7 +928,7 @@
       "caption": "Day 6 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T02:05:53.000Z",
+      "publishedAt": "2026-11-23T02:20:03.000Z",
       "metrics": {
         "views": 61014,
         "likes": 4478,
@@ -937,8 +937,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -948,7 +948,7 @@
       "caption": "Day 51 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-13T17:05:53.000Z",
+      "publishedAt": "2026-11-13T17:20:03.000Z",
       "metrics": {
         "views": 55869,
         "likes": 11063,
@@ -957,8 +957,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -968,7 +968,7 @@
       "caption": "asmr take 6 #asmr",
       "hashtags": ["asmr", "foodtok", "spicyfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T14:05:53.000Z",
+      "publishedAt": "2026-11-23T14:20:03.000Z",
       "metrics": {
         "views": 54936,
         "likes": 7704,
@@ -977,8 +977,8 @@
       },
       "matchedQuery": "hashtag:asmr",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.870Z",
-      "lastSeenAt": "2026-11-24T08:05:53.870Z"
+      "firstSeenAt": "2026-11-24T08:20:03.881Z",
+      "lastSeenAt": "2026-11-24T08:20:03.881Z"
     },
     {
       "platform": "tiktok",
@@ -988,7 +988,7 @@
       "caption": "Day 28 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-18T12:05:53.000Z",
+      "publishedAt": "2026-11-18T12:20:03.000Z",
       "metrics": {
         "views": 53732,
         "likes": 17964,
@@ -997,8 +997,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1008,7 +1008,7 @@
       "caption": "Day 5 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T07:05:53.000Z",
+      "publishedAt": "2026-11-23T07:20:03.000Z",
       "metrics": {
         "views": 53095,
         "likes": 3865,
@@ -1017,8 +1017,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1028,7 +1028,7 @@
       "caption": "asmr take 5 #asmr",
       "hashtags": ["asmr", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T17:05:53.000Z",
+      "publishedAt": "2026-11-23T17:20:03.000Z",
       "metrics": {
         "views": 49069,
         "likes": 1837,
@@ -1037,8 +1037,8 @@
       },
       "matchedQuery": "hashtag:asmr",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.870Z",
-      "lastSeenAt": "2026-11-24T08:05:53.870Z"
+      "firstSeenAt": "2026-11-24T08:20:03.881Z",
+      "lastSeenAt": "2026-11-24T08:20:03.881Z"
     },
     {
       "platform": "tiktok",
@@ -1048,7 +1048,7 @@
       "caption": "Day 50 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-13T22:05:53.000Z",
+      "publishedAt": "2026-11-13T22:20:03.000Z",
       "metrics": {
         "views": 47950,
         "likes": 10450,
@@ -1057,8 +1057,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1068,7 +1068,7 @@
       "caption": "Day 27 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-18T17:05:53.000Z",
+      "publishedAt": "2026-11-18T17:20:03.000Z",
       "metrics": {
         "views": 45813,
         "likes": 17351,
@@ -1077,8 +1077,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1088,7 +1088,7 @@
       "caption": "Day 4 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T12:05:53.000Z",
+      "publishedAt": "2026-11-23T12:20:03.000Z",
       "metrics": {
         "views": 45176,
         "likes": 3252,
@@ -1097,8 +1097,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1108,7 +1108,7 @@
       "caption": "asmr take 4 #asmr",
       "hashtags": ["asmr", "foodtok", "spicyfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T20:05:53.000Z",
+      "publishedAt": "2026-11-23T20:20:03.000Z",
       "metrics": {
         "views": 43202,
         "likes": 4970,
@@ -1117,8 +1117,8 @@
       },
       "matchedQuery": "hashtag:asmr",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.870Z",
-      "lastSeenAt": "2026-11-24T08:05:53.870Z"
+      "firstSeenAt": "2026-11-24T08:20:03.881Z",
+      "lastSeenAt": "2026-11-24T08:20:03.881Z"
     },
     {
       "platform": "tiktok",
@@ -1128,7 +1128,7 @@
       "caption": "Day 49 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-14T03:05:53.000Z",
+      "publishedAt": "2026-11-14T03:20:03.000Z",
       "metrics": {
         "views": 40031,
         "likes": 9837,
@@ -1137,8 +1137,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1148,7 +1148,7 @@
       "caption": "Day 26 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-18T22:05:53.000Z",
+      "publishedAt": "2026-11-18T22:20:03.000Z",
       "metrics": {
         "views": 37894,
         "likes": 16738,
@@ -1157,8 +1157,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1168,7 +1168,7 @@
       "caption": "asmr take 3 #asmr",
       "hashtags": ["asmr", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T23:05:53.000Z",
+      "publishedAt": "2026-11-23T23:20:03.000Z",
       "metrics": {
         "views": 37335,
         "likes": 8103,
@@ -1177,8 +1177,8 @@
       },
       "matchedQuery": "hashtag:asmr",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.870Z",
-      "lastSeenAt": "2026-11-24T08:05:53.870Z"
+      "firstSeenAt": "2026-11-24T08:20:03.881Z",
+      "lastSeenAt": "2026-11-24T08:20:03.881Z"
     },
     {
       "platform": "tiktok",
@@ -1188,7 +1188,7 @@
       "caption": "Day 3 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T17:05:53.000Z",
+      "publishedAt": "2026-11-23T17:20:03.000Z",
       "metrics": {
         "views": 37257,
         "likes": 2639,
@@ -1197,8 +1197,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1208,7 +1208,7 @@
       "caption": "Day 48 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-14T08:05:53.000Z",
+      "publishedAt": "2026-11-14T08:20:03.000Z",
       "metrics": {
         "views": 32112,
         "likes": 9224,
@@ -1217,8 +1217,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1228,7 +1228,7 @@
       "caption": "asmr take 2 #asmr",
       "hashtags": ["asmr", "foodtok", "spicyfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-24T02:05:53.000Z",
+      "publishedAt": "2026-11-24T02:20:03.000Z",
       "metrics": {
         "views": 31468,
         "likes": 2236,
@@ -1237,8 +1237,8 @@
       },
       "matchedQuery": "hashtag:asmr",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.870Z",
-      "lastSeenAt": "2026-11-24T08:05:53.870Z"
+      "firstSeenAt": "2026-11-24T08:20:03.881Z",
+      "lastSeenAt": "2026-11-24T08:20:03.881Z"
     },
     {
       "platform": "tiktok",
@@ -1248,7 +1248,7 @@
       "caption": "Day 25 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-19T03:05:53.000Z",
+      "publishedAt": "2026-11-19T03:20:03.000Z",
       "metrics": {
         "views": 29975,
         "likes": 16125,
@@ -1257,8 +1257,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1268,7 +1268,7 @@
       "caption": "Day 2 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T22:05:53.000Z",
+      "publishedAt": "2026-11-23T22:20:03.000Z",
       "metrics": {
         "views": 29338,
         "likes": 2026,
@@ -1277,8 +1277,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1288,7 +1288,7 @@
       "caption": "asmr take 1 #asmr",
       "hashtags": ["asmr", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-24T05:05:53.000Z",
+      "publishedAt": "2026-11-24T05:20:03.000Z",
       "metrics": {
         "views": 25601,
         "likes": 5369,
@@ -1297,8 +1297,8 @@
       },
       "matchedQuery": "hashtag:asmr",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.870Z",
-      "lastSeenAt": "2026-11-24T08:05:53.870Z"
+      "firstSeenAt": "2026-11-24T08:20:03.881Z",
+      "lastSeenAt": "2026-11-24T08:20:03.881Z"
     },
     {
       "platform": "tiktok",
@@ -1308,7 +1308,7 @@
       "caption": "Day 47 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["mukbang", "asmr"],
       "mediaType": "video",
-      "publishedAt": "2026-11-14T13:05:53.000Z",
+      "publishedAt": "2026-11-14T13:20:03.000Z",
       "metrics": {
         "views": 24193,
         "likes": 8611,
@@ -1317,8 +1317,8 @@
       },
       "matchedQuery": "hashtag:mukbang",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1328,7 +1328,7 @@
       "caption": "Day 24 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "mukbang"],
       "mediaType": "video",
-      "publishedAt": "2026-11-19T08:05:53.000Z",
+      "publishedAt": "2026-11-19T08:20:03.000Z",
       "metrics": {
         "views": 22056,
         "likes": 15512,
@@ -1337,8 +1337,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1348,7 +1348,7 @@
       "caption": "Day 1 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "koreanfood"],
       "mediaType": "video",
-      "publishedAt": "2026-11-24T03:05:53.000Z",
+      "publishedAt": "2026-11-24T03:20:03.000Z",
       "metrics": {
         "views": 21419,
         "likes": 1413,
@@ -1357,8 +1357,8 @@
       },
       "matchedQuery": "keyword:spicy noodle challenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "web",
@@ -1368,7 +1368,7 @@
       "caption": "Fire noodle cooking hack no.8 #spicynoodlechallenge #ramenhack",
       "hashtags": ["spicynoodlechallenge", "ramenhack"],
       "mediaType": "unknown",
-      "publishedAt": "2026-11-24T08:05:53.014Z",
+      "publishedAt": "2026-11-24T08:20:03.115Z",
       "metrics": {
         "views": 15968,
         "likes": null,
@@ -1377,8 +1377,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "browser",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "web",
@@ -1388,7 +1388,7 @@
       "caption": "Fire noodle cooking hack no.7 #spicynoodlechallenge #ramenhack",
       "hashtags": ["spicynoodlechallenge", "ramenhack"],
       "mediaType": "unknown",
-      "publishedAt": "2026-11-24T08:05:53.014Z",
+      "publishedAt": "2026-11-24T08:20:03.115Z",
       "metrics": {
         "views": 14597,
         "likes": null,
@@ -1397,8 +1397,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "browser",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "tiktok",
@@ -1408,7 +1408,7 @@
       "caption": "Day 23 of the spicy noodle challenge #spicynoodlechallenge",
       "hashtags": ["spicynoodlechallenge", "spicyfood", "foodtok", "ramenhack"],
       "mediaType": "video",
-      "publishedAt": "2026-11-19T13:05:53.000Z",
+      "publishedAt": "2026-11-19T13:20:03.000Z",
       "metrics": {
         "views": 14137,
         "likes": 14899,
@@ -1417,8 +1417,8 @@
       },
       "matchedQuery": "keyword:fire noodle",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "web",
@@ -1428,7 +1428,7 @@
       "caption": "Fire noodle cooking hack no.6 #spicynoodlechallenge #ramenhack",
       "hashtags": ["spicynoodlechallenge", "ramenhack"],
       "mediaType": "unknown",
-      "publishedAt": "2026-11-24T08:05:53.014Z",
+      "publishedAt": "2026-11-24T08:20:03.115Z",
       "metrics": {
         "views": 13226,
         "likes": null,
@@ -1437,8 +1437,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "browser",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "web",
@@ -1448,7 +1448,7 @@
       "caption": "Fire noodle cooking hack no.5 #spicynoodlechallenge #ramenhack",
       "hashtags": ["spicynoodlechallenge", "ramenhack"],
       "mediaType": "unknown",
-      "publishedAt": "2026-11-24T08:05:53.014Z",
+      "publishedAt": "2026-11-24T08:20:03.115Z",
       "metrics": {
         "views": 11855,
         "likes": null,
@@ -1457,8 +1457,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "browser",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "web",
@@ -1468,7 +1468,7 @@
       "caption": "Fire noodle cooking hack no.4 #spicynoodlechallenge #ramenhack",
       "hashtags": ["spicynoodlechallenge", "ramenhack"],
       "mediaType": "unknown",
-      "publishedAt": "2026-11-24T08:05:53.014Z",
+      "publishedAt": "2026-11-24T08:20:03.115Z",
       "metrics": {
         "views": 10484,
         "likes": null,
@@ -1477,8 +1477,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "browser",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "web",
@@ -1488,7 +1488,7 @@
       "caption": "Fire noodle cooking hack no.3 #spicynoodlechallenge #ramenhack",
       "hashtags": ["spicynoodlechallenge", "ramenhack"],
       "mediaType": "unknown",
-      "publishedAt": "2026-11-24T08:05:53.014Z",
+      "publishedAt": "2026-11-24T08:20:03.115Z",
       "metrics": {
         "views": 9113,
         "likes": null,
@@ -1497,8 +1497,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "browser",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "web",
@@ -1508,7 +1508,7 @@
       "caption": "Fire noodle cooking hack no.2 #spicynoodlechallenge #ramenhack",
       "hashtags": ["spicynoodlechallenge", "ramenhack"],
       "mediaType": "unknown",
-      "publishedAt": "2026-11-24T08:05:53.014Z",
+      "publishedAt": "2026-11-24T08:20:03.115Z",
       "metrics": {
         "views": 7742,
         "likes": null,
@@ -1517,8 +1517,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "browser",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "web",
@@ -1528,7 +1528,7 @@
       "caption": "Fire noodle cooking hack no.1 #spicynoodlechallenge #ramenhack",
       "hashtags": ["spicynoodlechallenge", "ramenhack"],
       "mediaType": "unknown",
-      "publishedAt": "2026-11-24T08:05:53.014Z",
+      "publishedAt": "2026-11-24T08:20:03.115Z",
       "metrics": {
         "views": 6371,
         "likes": null,
@@ -1537,8 +1537,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "browser",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1548,7 +1548,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-24T06:05:53.014Z",
+      "publishedAt": "2026-11-24T06:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 361,
@@ -1557,8 +1557,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1568,7 +1568,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-24T04:05:53.014Z",
+      "publishedAt": "2026-11-24T04:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1577,8 +1577,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1588,7 +1588,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-24T02:05:53.014Z",
+      "publishedAt": "2026-11-24T02:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 783,
@@ -1597,8 +1597,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1608,7 +1608,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-24T00:05:53.014Z",
+      "publishedAt": "2026-11-24T00:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 994,
@@ -1617,8 +1617,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1628,7 +1628,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T22:05:53.014Z",
+      "publishedAt": "2026-11-23T22:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 1205,
@@ -1637,8 +1637,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1648,7 +1648,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-23T20:05:53.014Z",
+      "publishedAt": "2026-11-23T20:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 1416,
@@ -1657,8 +1657,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1668,7 +1668,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T18:05:53.014Z",
+      "publishedAt": "2026-11-23T18:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 1627,
@@ -1677,8 +1677,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1688,7 +1688,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-23T16:05:53.014Z",
+      "publishedAt": "2026-11-23T16:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 1838,
@@ -1697,8 +1697,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1708,7 +1708,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T14:05:53.014Z",
+      "publishedAt": "2026-11-23T14:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 2049,
@@ -1717,8 +1717,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1728,7 +1728,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-23T12:05:53.014Z",
+      "publishedAt": "2026-11-23T12:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 2260,
@@ -1737,8 +1737,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1748,7 +1748,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-23T10:05:53.014Z",
+      "publishedAt": "2026-11-23T10:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": 2471,
@@ -1757,8 +1757,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1768,7 +1768,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-22T16:05:53.014Z",
+      "publishedAt": "2026-11-22T16:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1777,8 +1777,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1788,7 +1788,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T14:05:53.014Z",
+      "publishedAt": "2026-11-22T14:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1797,8 +1797,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1808,7 +1808,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-22T12:05:53.014Z",
+      "publishedAt": "2026-11-22T12:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1817,8 +1817,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1828,7 +1828,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T10:05:53.014Z",
+      "publishedAt": "2026-11-22T10:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1837,8 +1837,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1848,7 +1848,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-22T08:05:53.014Z",
+      "publishedAt": "2026-11-22T08:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1857,8 +1857,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1868,7 +1868,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T06:05:53.014Z",
+      "publishedAt": "2026-11-22T06:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1877,8 +1877,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1888,7 +1888,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe"],
       "mediaType": "carousel",
-      "publishedAt": "2026-11-22T04:05:53.014Z",
+      "publishedAt": "2026-11-22T04:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1897,8 +1897,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     },
     {
       "platform": "instagram",
@@ -1908,7 +1908,7 @@
       "caption": "Trying the viral fire noodle recipe at home #spicynoodlechallenge #koreanfood #recipe #cheesy",
       "hashtags": ["spicynoodlechallenge", "koreanfood", "recipe", "cheesy"],
       "mediaType": "video",
-      "publishedAt": "2026-11-22T02:05:53.014Z",
+      "publishedAt": "2026-11-22T02:20:03.115Z",
       "metrics": {
         "views": null,
         "likes": null,
@@ -1917,8 +1917,8 @@
       },
       "matchedQuery": "hashtag:spicynoodlechallenge",
       "source": "official-api",
-      "firstSeenAt": "2026-11-24T08:05:53.014Z",
-      "lastSeenAt": "2026-11-24T08:05:53.014Z"
+      "firstSeenAt": "2026-11-24T08:20:03.115Z",
+      "lastSeenAt": "2026-11-24T08:20:03.115Z"
     }
   ],
   "hashtags": [
@@ -2202,7 +2202,7 @@
       "id": 6,
       "status": "blocked",
       "proposedBy": "recorded:claude-opus-5-5",
-      "createdAt": "2026-11-24T08:05:53.870Z",
+      "createdAt": "2026-11-24T08:20:03.881Z",
       "checks": [
         {
           "check": "schema",
@@ -2212,7 +2212,7 @@
         {
           "check": "evidence",
           "passed": true,
-          "detail": "근거 1개 모두 관찰 사실에 있음"
+          "detail": "근거 1개 모두 DB에 있음"
         },
         {
           "check": "claims",
@@ -2222,7 +2222,12 @@
         {
           "check": "grounded_numbers",
           "passed": true,
-          "detail": "문장 속 숫자가 모두 근거 사실의 값"
+          "detail": "문장 속 숫자가 모두 검증된 claims 값"
+        },
+        {
+          "check": "target",
+          "passed": true,
+          "detail": "실행 대상 \"spicy noodle challenge\"가 근거와 제목에 일치"
         },
         {
           "check": "capability",
@@ -2243,7 +2248,8 @@
       "reviewer": null,
       "reviewNote": null,
       "reviewedAt": null,
-      "resultRunId": null
+      "resultRunId": null,
+      "executionError": null
     },
     {
       "kind": "collect_query",
@@ -2264,7 +2270,7 @@
       "id": 5,
       "status": "blocked",
       "proposedBy": "recorded:claude-opus-5-5",
-      "createdAt": "2026-11-24T08:05:53.870Z",
+      "createdAt": "2026-11-24T08:20:03.881Z",
       "checks": [
         {
           "check": "schema",
@@ -2274,7 +2280,7 @@
         {
           "check": "evidence",
           "passed": true,
-          "detail": "근거 1개 모두 관찰 사실에 있음"
+          "detail": "근거 1개 모두 DB에 있음"
         },
         {
           "check": "claims",
@@ -2283,8 +2289,13 @@
         },
         {
           "check": "grounded_numbers",
+          "passed": true,
+          "detail": "문장 속 숫자가 모두 검증된 claims 값"
+        },
+        {
+          "check": "target",
           "passed": false,
-          "detail": "근거에 없는 숫자: 120"
+          "detail": "실행할 쿼리 \"fire noodle\"가 근거(hashtag:firenoodle 또는 related:*>firenoodle)에 없습니다"
         },
         {
           "check": "capability",
@@ -2294,7 +2305,7 @@
         {
           "check": "duplicate",
           "passed": true,
-          "detail": "검토 중인 같은 제안이나 최근 수집 없음"
+          "detail": "검토 중이거나 거절된 같은 제안, 최근 수집 없음"
         },
         {
           "check": "quota",
@@ -2305,7 +2316,8 @@
       "reviewer": null,
       "reviewNote": null,
       "reviewedAt": null,
-      "resultRunId": null
+      "resultRunId": null,
+      "executionError": null
     },
     {
       "kind": "collect_query",
@@ -2326,7 +2338,7 @@
       "id": 4,
       "status": "blocked",
       "proposedBy": "recorded:claude-opus-5-5",
-      "createdAt": "2026-11-24T08:05:53.870Z",
+      "createdAt": "2026-11-24T08:20:03.881Z",
       "checks": [
         {
           "check": "schema",
@@ -2336,7 +2348,7 @@
         {
           "check": "evidence",
           "passed": false,
-          "detail": "관찰 사실에 없는 근거: hashtag:spicyramen"
+          "detail": "DB에 없는 근거: hashtag:spicyramen"
         },
         {
           "check": "claims",
@@ -2346,7 +2358,12 @@
         {
           "check": "grounded_numbers",
           "passed": false,
-          "detail": "근거에 없는 숫자: 3200000, 240"
+          "detail": "단위 변환·비율 표현은 쓸 수 없음: \"240%\" / claims에 없는 숫자: 240"
+        },
+        {
+          "check": "target",
+          "passed": true,
+          "detail": "실행 대상 \"spicyramen\"가 근거와 제목에 일치"
         },
         {
           "check": "capability",
@@ -2356,7 +2373,7 @@
         {
           "check": "duplicate",
           "passed": true,
-          "detail": "검토 중인 같은 제안이나 최근 수집 없음"
+          "detail": "검토 중이거나 거절된 같은 제안, 최근 수집 없음"
         },
         {
           "check": "quota",
@@ -2367,7 +2384,8 @@
       "reviewer": null,
       "reviewNote": null,
       "reviewedAt": null,
-      "resultRunId": null
+      "resultRunId": null,
+      "executionError": null
     },
     {
       "kind": "operator_action",
@@ -2388,7 +2406,7 @@
       "id": 3,
       "status": "pending",
       "proposedBy": "recorded:claude-opus-5-5",
-      "createdAt": "2026-11-24T08:05:53.870Z",
+      "createdAt": "2026-11-24T08:20:03.881Z",
       "checks": [
         {
           "check": "schema",
@@ -2398,7 +2416,7 @@
         {
           "check": "evidence",
           "passed": true,
-          "detail": "근거 2개 모두 관찰 사실에 있음"
+          "detail": "근거 2개 모두 DB에 있음"
         },
         {
           "check": "claims",
@@ -2408,7 +2426,12 @@
         {
           "check": "grounded_numbers",
           "passed": true,
-          "detail": "문장 속 숫자가 모두 근거 사실의 값"
+          "detail": "문장 속 숫자가 모두 검증된 claims 값"
+        },
+        {
+          "check": "target",
+          "passed": true,
+          "detail": "실행 대상 없음 (운영 조치)"
         },
         {
           "check": "capability",
@@ -2418,7 +2441,7 @@
         {
           "check": "duplicate",
           "passed": true,
-          "detail": "검토 중인 같은 제안이나 최근 수집 없음"
+          "detail": "검토 중이거나 거절된 같은 제안, 최근 수집 없음"
         },
         {
           "check": "quota",
@@ -2429,7 +2452,8 @@
       "reviewer": null,
       "reviewNote": null,
       "reviewedAt": null,
-      "resultRunId": null
+      "resultRunId": null,
+      "executionError": null
     },
     {
       "kind": "retry_run",
@@ -2455,7 +2479,7 @@
       "id": 2,
       "status": "pending",
       "proposedBy": "recorded:claude-opus-5-5",
-      "createdAt": "2026-11-24T08:05:53.870Z",
+      "createdAt": "2026-11-24T08:20:03.881Z",
       "checks": [
         {
           "check": "schema",
@@ -2465,7 +2489,7 @@
         {
           "check": "evidence",
           "passed": true,
-          "detail": "근거 1개 모두 관찰 사실에 있음"
+          "detail": "근거 1개 모두 DB에 있음"
         },
         {
           "check": "claims",
@@ -2475,7 +2499,12 @@
         {
           "check": "grounded_numbers",
           "passed": true,
-          "detail": "문장 속 숫자가 모두 근거 사실의 값"
+          "detail": "문장 속 숫자가 모두 검증된 claims 값"
+        },
+        {
+          "check": "target",
+          "passed": true,
+          "detail": "재실행 대상 #4이 근거에 있음"
         },
         {
           "check": "capability",
@@ -2485,7 +2514,7 @@
         {
           "check": "duplicate",
           "passed": true,
-          "detail": "검토 중인 같은 제안이나 최근 수집 없음"
+          "detail": "검토 중이거나 거절된 같은 제안, 최근 수집 없음"
         },
         {
           "check": "quota",
@@ -2496,7 +2525,8 @@
       "reviewer": null,
       "reviewNote": null,
       "reviewedAt": null,
-      "resultRunId": null
+      "resultRunId": null,
+      "executionError": null
     },
     {
       "kind": "collect_query",
@@ -2522,7 +2552,7 @@
       "id": 1,
       "status": "executed",
       "proposedBy": "recorded:claude-opus-5-5",
-      "createdAt": "2026-11-24T08:05:53.870Z",
+      "createdAt": "2026-11-24T08:20:03.881Z",
       "checks": [
         {
           "check": "schema",
@@ -2532,7 +2562,7 @@
         {
           "check": "evidence",
           "passed": true,
-          "detail": "근거 2개 모두 관찰 사실에 있음"
+          "detail": "근거 2개 모두 DB에 있음"
         },
         {
           "check": "claims",
@@ -2542,7 +2572,12 @@
         {
           "check": "grounded_numbers",
           "passed": true,
-          "detail": "문장 속 숫자가 모두 근거 사실의 값"
+          "detail": "문장 속 숫자가 모두 검증된 claims 값"
+        },
+        {
+          "check": "target",
+          "passed": true,
+          "detail": "실행 대상 \"asmr\"가 근거와 제목에 일치"
         },
         {
           "check": "capability",
@@ -2552,7 +2587,7 @@
         {
           "check": "duplicate",
           "passed": true,
-          "detail": "검토 중인 같은 제안이나 최근 수집 없음"
+          "detail": "검토 중이거나 거절된 같은 제안, 최근 수집 없음"
         },
         {
           "check": "quota",
@@ -2562,8 +2597,9 @@
       ],
       "reviewer": "demo-reviewer",
       "reviewNote": "데모: 승인 이후 흐름을 보여주기 위한 예시 승인",
-      "reviewedAt": "2026-11-24T08:05:53.870Z",
-      "resultRunId": 11
+      "reviewedAt": "2026-11-24T08:20:03.881Z",
+      "resultRunId": 11,
+      "executionError": null
     }
   ]
 }

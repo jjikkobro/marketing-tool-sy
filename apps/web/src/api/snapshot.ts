@@ -16,20 +16,31 @@ export interface SnapshotResult {
   snapshot: Snapshot;
   /** 검토 API에 연결되어 사람이 결정할 수 있는지 */
   reviewable: boolean;
+  /** 검토 API가 스냅샷 응답 헤더로만 주는 토큰. 쓰기 요청에 붙인다 (CSRF 방지) */
+  reviewToken: string | null;
 }
 
 async function fetchSnapshot(): Promise<SnapshotResult> {
   try {
     const live = await fetch(`${import.meta.env.BASE_URL}api/snapshot`);
-    if (live.ok && live.headers.get('content-type')?.includes('application/json')) {
-      return { snapshot: snapshotSchema.parse(await live.json()), reviewable: true };
+    const token = live.headers.get('x-review-token');
+    if (live.ok && token && live.headers.get('content-type')?.includes('application/json')) {
+      return {
+        snapshot: snapshotSchema.parse(await live.json()),
+        reviewable: true,
+        reviewToken: token,
+      };
     }
   } catch {
     // 검토 API가 없으면 정적 스냅샷으로 넘어간다
   }
   const response = await fetch(`${import.meta.env.BASE_URL}data/snapshot.json`);
   if (!response.ok) throw new Error(`스냅샷을 불러오지 못했습니다 (${response.status})`);
-  return { snapshot: snapshotSchema.parse(await response.json()), reviewable: false };
+  return {
+    snapshot: snapshotSchema.parse(await response.json()),
+    reviewable: false,
+    reviewToken: null,
+  };
 }
 
 export const snapshotQuery = () =>
@@ -45,10 +56,11 @@ export async function decide(
   id: Proposal['id'],
   decision: Decision,
   body: { reviewer: string; note?: string },
+  reviewToken: string,
 ): Promise<Proposal> {
   const response = await fetch(`${import.meta.env.BASE_URL}api/proposals/${id}/${decision}`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', 'x-review-token': reviewToken },
     body: JSON.stringify(body),
   });
   const payload: unknown = await response.json();

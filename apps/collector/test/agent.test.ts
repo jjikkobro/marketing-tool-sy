@@ -50,7 +50,7 @@ function failedChecks(db: Db, draft: unknown) {
 }
 
 describe('가드: 할루시네이션 차단', () => {
-  it('근거가 맞는 제안은 7개 검사를 모두 통과한다', async () => {
+  it('근거가 맞는 제안은 모든 검사를 통과한다', async () => {
     const db = await seeded();
     expect(failedChecks(db, valid)).toEqual([]);
   });

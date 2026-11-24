@@ -22,6 +22,7 @@ export const guardCheckLabel: Record<GuardCheck['check'], string> = {
   evidence: '근거 존재',
   claims: '수치 대조',
   grounded_numbers: '문장 속 숫자',
+  target: '실행 대상',
   capability: '실행 가능',
   duplicate: '중복',
   quota: 'API 쿼터',

@@ -12,7 +12,7 @@ import type { CollectQuery, Proposal } from '../schema.ts';
 import { verifyProposal } from './guard.ts';
 import { buildObservation } from './observation.ts';
 import type { Planner } from './planners.ts';
-import { getProposal, insertProposal, updateProposal } from './store.ts';
+import { getProposal, insertProposal, StaleProposalError, updateProposal } from './store.ts';
 
 /** 승인된 제안을 실제 수집으로 바꿀 때 어떤 어댑터를 쓸지. 데모와 실서비스가 다르다. */
 export type AdapterFactory = (adapterId: string, query: CollectQuery) => SourceAdapter;
@@ -62,15 +62,17 @@ export function reject(
   id: number,
   input: { reviewer: string; note: string; now?: Date },
 ): Proposal {
-  const proposal = getProposal(db, id);
-  requirePending(proposal);
+  requirePending(getProposal(db, id));
   if (!input.note.trim()) throw new ReviewError('거절 사유를 적어 주세요');
-  return updateProposal(db, id, {
-    status: 'rejected',
-    reviewer: requireReviewer(input.reviewer),
-    reviewNote: input.note.trim(),
-    reviewedAt: input.now ?? new Date(),
-  });
+  return decided(() =>
+    updateProposal(db, id, {
+      from: 'pending',
+      status: 'rejected',
+      reviewer: requireReviewer(input.reviewer),
+      reviewNote: input.note.trim(),
+      reviewedAt: input.now ?? new Date(),
+    }),
+  );
 }
 
 export function acknowledge(
@@ -80,20 +82,38 @@ export function acknowledge(
 ): Proposal {
   const proposal = getProposal(db, id);
   requirePending(proposal);
-  if (proposal.kind !== 'operator_action')
+  if (proposal.kind !== 'operator_action') {
     throw new ReviewError('확인(acknowledge)은 운영 조치 제안에만 씁니다');
-  return updateProposal(db, id, {
-    status: 'acknowledged',
-    reviewer: requireReviewer(input.reviewer),
-    reviewNote: input.note?.trim() || null,
-    reviewedAt: input.now ?? new Date(),
-  });
+  }
+  return decided(() =>
+    updateProposal(db, id, {
+      from: 'pending',
+      status: 'acknowledged',
+      reviewer: requireReviewer(input.reviewer),
+      reviewNote: input.note?.trim() || null,
+      reviewedAt: input.now ?? new Date(),
+    }),
+  );
+}
+
+/** 다른 프로세스가 먼저 결정한 경우를 검토자가 이해할 수 있는 오류로 바꾼다 */
+function decided(update: () => Proposal): Proposal {
+  try {
+    return update();
+  } catch (error) {
+    if (error instanceof StaleProposalError) throw new ReviewError(error.message);
+    throw error;
+  }
 }
 
 /**
  * 승인하고 실행한다.
- * 승인 직전에 가드를 다시 돌린다. 제안이 만들어진 뒤 상황이 바뀌었을 수 있기 때문이다
- * (그사이 같은 쿼리가 수집됐거나, 쿼터가 찼거나, 대상 실행이 이미 재실행됨).
+ *
+ * 1. 승인 시점에 가드를 다시 돌린다. 제안이 만들어진 뒤 상황이 바뀌었을 수 있다
+ *    (그사이 같은 쿼리가 수집됐거나, 쿼터가 찼거나, 대상 실행이 이미 재실행됨).
+ * 2. 재검증과 pending → approved 전이를 한 트랜잭션에서 한다. 전이는 "아직 pending일 때만" 일어나므로
+ *    두 곳에서 동시에 승인해도 한 번만 실행된다.
+ * 3. 실행 오류는 execution_error에 따로 남긴다. 사람이 쓴 승인 사유는 그대로 둔다.
  */
 export async function approve(
   db: Db,
@@ -108,33 +128,39 @@ export async function approve(
 ): Promise<Proposal> {
   const proposal = getProposal(db, id);
   requirePending(proposal);
-  if (proposal.kind === 'operator_action')
+  if (proposal.kind === 'operator_action') {
     throw new ReviewError('운영 조치 제안은 실행할 것이 없습니다. 확인(acknowledge)을 쓰세요');
+  }
   const reviewer = requireReviewer(input.reviewer);
   const now = input.now ?? new Date();
 
-  // 자기 자신과의 중복 검사를 피하려고, 재검증 동안에는 잠시 검토 대기열에서 뺀다
-  db.prepare(`UPDATE agent_proposal SET status = 'blocked' WHERE id = ?`).run(id);
-  const recheck = verifyProposal(db, buildObservation(db, now), proposal, now);
-  if (!recheck.passed) {
-    return updateProposal(db, id, {
-      status: 'blocked',
-      checks: recheck.checks,
-      reviewer,
-      reviewedAt: now,
-      reviewNote: '승인 시점 재검증 실패',
+  const gate = db.transaction(() => {
+    const recheck = verifyProposal(db, buildObservation(db, now), proposal, now, {
+      excludeProposalId: id,
     });
-  }
-
-  updateProposal(db, id, {
-    status: 'approved',
-    reviewer,
-    reviewNote: input.note?.trim() || null,
-    reviewedAt: now,
+    if (!recheck.passed) {
+      return updateProposal(db, id, {
+        from: 'pending',
+        status: 'blocked',
+        checks: recheck.checks,
+        reviewer,
+        reviewedAt: now,
+        reviewNote: '승인 시점 재검증 실패',
+      });
+    }
+    return updateProposal(db, id, {
+      from: 'pending',
+      status: 'approved',
+      reviewer,
+      reviewNote: input.note?.trim() || null,
+      reviewedAt: now,
+    });
   });
+  const gated = decided(() => gate());
+  if (gated.status !== 'approved') return gated;
 
-  const target = resolveTarget(db, proposal);
   try {
+    const target = resolveTarget(db, proposal);
     const result = await runCollection(
       db,
       input.adapterFor(target.adapterId, target.query),
@@ -145,13 +171,15 @@ export async function approve(
       },
     );
     return updateProposal(db, id, {
+      from: 'approved',
       status: result.status === 'failed' ? 'failed' : 'executed',
       resultRunId: result.runId,
     });
   } catch (error) {
     return updateProposal(db, id, {
+      from: 'approved',
       status: 'failed',
-      reviewNote: `실행 오류: ${error instanceof Error ? error.message : String(error)}`,
+      executionError: error instanceof Error ? error.message : String(error),
     });
   }
 }

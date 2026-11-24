@@ -8,7 +8,8 @@
  *
  *   agent plan [--planner recorded|claude]            관찰 → LLM 제안 → 가드 검증 → 검토 대기열에 저장
  *   agent list                                        제안과 검증 결과 보기
- *   agent approve <id> --reviewer <이름> [--note]     사람이 승인 → 승인 시점 재검증 → 실행
+ *   agent watch [--every <분>]                         주기적으로 계획 → 가드 (실행은 하지 않음)
+ *   agent approve <id> --reviewer <이름> [--note]     사람이 터미널에서 확인 → 승인 시점 재검증 → 실행
  *   agent reject <id> --reviewer <이름> --note <사유> 사람이 거절
  *   agent ack <id> --reviewer <이름>                  운영 조치 제안 확인
  */
@@ -29,10 +30,10 @@ import type { CollectionRun, Proposal } from './schema.ts';
 import { buildSnapshot } from './snapshot.ts';
 import { adapterFactoryFromEnv } from './agent/adapters-from-env.ts';
 import { claudePlanner, recordedPlanner } from './agent/planners.ts';
-import { acknowledge, approve, planAndGuard, reject } from './agent/review.ts';
-import { listProposals } from './agent/store.ts';
+import { acknowledge, approve, planAndGuard, reject, ReviewError } from './agent/review.ts';
+import { getProposal, listProposals } from './agent/store.ts';
 import { runAgentDemo } from './demo/agent-demo.ts';
-import { userInfo } from 'node:os';
+import { createInterface } from 'node:readline/promises';
 
 export const DEFAULT_DB = resolve(import.meta.dirname, '../.data/collector.db');
 
@@ -105,21 +106,28 @@ const PROPOSAL_STATUS: Record<Proposal['status'], string> = {
   acknowledged: '확인',
 };
 
+function targetOf(p: Proposal): string | null {
+  if (p.kind === 'collect_query') return `${p.adapterId} ${p.queryKind}:${p.queryValue}`;
+  if (p.kind === 'retry_run') return `실행 #${p.runId} 재실행`;
+  return null;
+}
+
 function printProposals(proposals: Proposal[]) {
   if (proposals.length === 0) return console.log('제안이 없습니다.');
   console.log(
     renderTable(proposals, [
       { header: '#', value: (p) => p.id, align: 'right' },
       { header: '상태', value: (p) => PROPOSAL_STATUS[p.status] },
-      { header: '종류', value: (p) => p.kind },
-      { header: '제목', value: (p) => p.title.slice(0, 34) },
+      { header: '제목', value: (p) => p.title.slice(0, 30) },
+      // 제목이 아니라 실제로 실행될 대상을 함께 보여준다. 사람은 이것을 보고 승인한다.
+      { header: '실행 대상', value: targetOf },
       {
         header: '가드',
         value: (p) =>
           p.checks
             .filter((c) => !c.passed)
             .map((c) => `✗ ${c.check}`)
-            .join(' ') || '✓ 7/7',
+            .join(' ') || `✓ ${p.checks.length}/${p.checks.length}`,
       },
     ]),
   );
@@ -129,24 +137,68 @@ function printProposals(proposals: Proposal[]) {
   }
 }
 
+/**
+ * 사람의 결정은 터미널에서 직접 확인을 받는다.
+ * 셸을 쓸 수 있는 AI 에이전트가 CLI를 대신 실행해 승인하는 경로를 줄이기 위해서다
+ * (에이전트의 셸 도구는 대화형 터미널이 아니다). 완전한 차단은 아니며 한계는 docs/decisions/0004에 적었다.
+ */
+async function confirmByHuman(proposal: Proposal, action: string): Promise<void> {
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    throw new ReviewError(
+      '사람의 확인이 필요합니다. 대화형 터미널에서 직접 실행하거나 웹 검토 화면(npm run dev:live)을 쓰세요',
+    );
+  }
+  console.log(`\n제안 #${proposal.id}: ${proposal.title}`);
+  console.log(`실행 대상: ${targetOf(proposal) ?? '없음 (운영 조치)'}`);
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await rl.question(`${action}하려면 제안 번호(${proposal.id})를 다시 입력하세요: `);
+  rl.close();
+  if (answer.trim() !== String(proposal.id)) throw new ReviewError('확인 번호가 달라 취소했습니다');
+}
+
 async function runAgentCommand(
   db: Db,
   [sub, idText]: string[],
-  values: { planner?: string; reviewer?: string; note?: string },
+  values: { planner?: string; reviewer?: string; note?: string; every?: string },
 ) {
-  const reviewer = values.reviewer ?? userInfo().username;
   const id = Number(idText);
+  const planner = () => (values.planner === 'claude' ? claudePlanner() : recordedPlanner());
+  const requireReviewer = () => {
+    if (!values.reviewer?.trim())
+      throw new ReviewError('--reviewer <이름>이 필요합니다 (누가 결정했는지 기록합니다)');
+    return values.reviewer.trim();
+  };
 
   switch (sub) {
     case 'plan': {
-      const planner = values.planner === 'claude' ? claudePlanner() : recordedPlanner();
-      console.log(`계획자: ${planner.id}`);
-      await planAndGuard(db, planner);
+      const p = planner();
+      console.log(`계획자: ${p.id}`);
+      await planAndGuard(db, p);
       return printProposals(listProposals(db, { limit: 20 }).reverse());
+    }
+    case 'watch': {
+      // 주기적으로 관찰 → 제안 → 가드까지만 돈다. 실행은 사람이 승인해야 일어난다.
+      const minutes = Number(values.every ?? '60');
+      if (!Number.isFinite(minutes) || minutes < 1)
+        throw new Error('--every는 1 이상의 분 단위 숫자여야 합니다');
+      const p = planner();
+      console.log(
+        `계획자 ${p.id}를 ${minutes}분마다 실행합니다. 제안은 사람의 승인을 기다립니다 (Ctrl+C로 종료).`,
+      );
+      for (;;) {
+        const results = await planAndGuard(db, p);
+        const pending = results.filter((r) => r.proposal?.status === 'pending').length;
+        console.log(
+          `[${new Date().toISOString()}] 제안 ${results.length}건 → 검토 대기 ${pending}건, 차단 ${results.length - pending}건`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, minutes * 60_000));
+      }
     }
     case 'list':
       return printProposals(listProposals(db).reverse());
     case 'approve': {
+      const reviewer = requireReviewer();
+      await confirmByHuman(getProposal(db, id), '승인하고 실행');
       const { mode, adapterFor } = adapterFactoryFromEnv();
       if (mode === 'recorded') console.log('실서비스 토큰이 없어 녹화 응답으로 실행합니다.');
       const result = await approve(db, id, { reviewer, note: values.note, adapterFor });
@@ -156,14 +208,20 @@ async function runAgentCommand(
       if (result.status === 'blocked') printProposals([result]);
       return;
     }
-    case 'reject':
+    case 'reject': {
+      const reviewer = requireReviewer();
+      await confirmByHuman(getProposal(db, id), '거절');
       reject(db, id, { reviewer, note: values.note ?? '' });
       return console.log(`제안 #${id}: 거절`);
-    case 'ack':
+    }
+    case 'ack': {
+      const reviewer = requireReviewer();
+      await confirmByHuman(getProposal(db, id), '확인');
       acknowledge(db, id, { reviewer, note: values.note });
       return console.log(`제안 #${id}: 확인`);
+    }
     default:
-      console.log('사용법: agent plan|list|approve|reject|ack');
+      console.log('사용법: agent plan|watch|list|approve|reject|ack');
   }
 }
 
@@ -178,6 +236,7 @@ async function main(argv: string[]) {
       out: { type: 'string' },
       planner: { type: 'string', default: 'recorded' },
       reviewer: { type: 'string' },
+      every: { type: 'string' },
       note: { type: 'string' },
     },
   });

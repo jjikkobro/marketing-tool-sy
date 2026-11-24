@@ -157,6 +157,9 @@ function DecisionRecord({ proposal }: { proposal: Proposal }) {
       결정: <span className="font-semibold text-charcoal">{proposal.reviewer}</span> ·{' '}
       {formatKst(proposal.reviewedAt)}
       {proposal.reviewNote && <> · “{proposal.reviewNote}”</>}
+      {proposal.executionError && (
+        <span className="block text-burgundy">실행 오류: {proposal.executionError}</span>
+      )}
       {proposal.resultRunId !== null && (
         <>
           {' '}

@@ -41,7 +41,8 @@ const plannerOutputSchema = z.object({
 });
 
 const SYSTEM_PROMPT = `당신은 소셜 콘텐츠 수집 운영 에이전트의 계획 담당이다.
-주어진 관찰 사실(facts)만 보고, 다음에 할 일을 최대 5개 제안한다.
+주어진 관찰 사실(facts)과 사람의 최근 결정(recentDecisions)을 보고, 다음에 할 일을 최대 5개 제안한다.
+당신의 제안은 결정적 검증기를 거친 뒤 사람이 승인해야 실행된다.
 
 제안 종류
 - collect_query: 새로 수집할 키워드나 해시태그. 관련 해시태그(related:*) 중 아직 직접 수집하지 않은 것을 우선한다.
@@ -50,11 +51,13 @@ const SYSTEM_PROMPT = `당신은 소셜 콘텐츠 수집 운영 에이전트의 
 
 사용할 수 있는 어댑터와 검색 종류: ${JSON.stringify(AGENT_ADAPTERS)}
 
-반드시 지킬 것
+반드시 지킬 것 (어기면 검증기가 제안을 차단한다)
 - evidence에는 facts에 있는 factId만 넣는다. 없는 사실을 만들지 않는다.
-- 숫자를 말하려면 claims에 {factId, field, value}로 적고, value는 그 사실의 values에 있는 값을 그대로 옮긴다.
-- title과 rationale에 숫자를 쓸 때는 evidence에 인용한 사실의 값만 쓴다. 해당 값이 없으면 숫자를 쓰지 말고 말로 설명한다.
-- 비율, 증감률, 순위처럼 facts에 없는 값을 계산해서 쓰지 않는다.
+- collect_query는 실행할 쿼리 자체가 근거에 있어야 한다: hashtag:<쿼리> 또는 related:<시드>><쿼리>를 evidence에 넣는다. 제목에 그 쿼리를 그대로 쓴다.
+- retry_run은 run:<번호>를 evidence에 넣는다.
+- 숫자를 쓰려면 claims에 {factId, field, value}로 적고 value는 그 사실의 값을 그대로 옮긴다.
+- title과 rationale에는 claims에 적은 값만 숫자로 쓴다. 만·배·%·비율·증감률처럼 바꾸거나 계산한 값, 한글로 쓴 수("세 배", "삼백만")는 쓰지 않는다.
+- recentDecisions에서 사람이 거절했거나 검증기가 차단한 제안과 같은 대상은 다시 제안하지 않는다. 거절 사유를 읽고 반영한다.
 - 확실한 근거가 없으면 제안하지 않는다. 제안이 없으면 빈 배열을 돌려준다.
 - 한국어로 쓴다.`;
 
@@ -76,7 +79,7 @@ export function claudePlanner(options: { client?: Anthropic; model?: string } = 
         messages: [
           {
             role: 'user',
-            content: `관찰 시각: ${observation.generatedAt}\n\nfacts:\n${JSON.stringify(observation.facts)}`,
+            content: `관찰 시각: ${observation.generatedAt}\n\nfacts:\n${JSON.stringify(observation.facts)}\n\nrecentDecisions:\n${JSON.stringify(observation.recentDecisions)}`,
           },
         ],
       });

@@ -128,11 +128,8 @@ interface RunRow {
   retries: number;
 }
 
-export function listRuns(db: Db, { limit = 20 } = {}): CollectionRun[] {
-  const rows = db
-    .prepare(`SELECT * FROM collection_run ORDER BY id DESC LIMIT ?`)
-    .all(limit) as RunRow[];
-  return rows.map((row) => ({
+function toRun(row: RunRow): CollectionRun {
+  return {
     id: row.id,
     adapterId: row.adapter_id,
     platform: row.platform,
@@ -148,7 +145,19 @@ export function listRuns(db: Db, { limit = 20 } = {}): CollectionRun[] {
     duplicates: row.duplicates,
     rejected: row.rejected,
     retries: row.retries,
-  }));
+  };
+}
+
+export function listRuns(db: Db, { limit = 20 } = {}): CollectionRun[] {
+  const rows = db
+    .prepare(`SELECT * FROM collection_run ORDER BY id DESC LIMIT ?`)
+    .all(limit) as RunRow[];
+  return rows.map(toRun);
+}
+
+export function getRun(db: Db, id: number): CollectionRun | null {
+  const row = db.prepare(`SELECT * FROM collection_run WHERE id = ?`).get(id) as RunRow | undefined;
+  return row ? toRun(row) : null;
 }
 
 export function listErrors(

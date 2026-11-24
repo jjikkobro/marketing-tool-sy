@@ -2,18 +2,24 @@
  * 가드: LLM 제안을 사람에게 보여주기 전에 결정적으로 검증한다.
  *
  * 원칙: LLM은 제안과 문장을 만들고, 숫자는 SQL이 만든다.
- * - 근거(evidence)는 관찰 사실 목록에 실제로 있는 factId여야 한다.
+ * - 근거(evidence)는 DB에 실제로 있는 사실이어야 한다.
  * - 수치 주장(claims)은 그 사실의 SQL 값과 정확히 같아야 한다.
- * - 제목과 근거 문장에 쓴 숫자는 인용한 사실의 값 중 하나여야 한다. 숫자를 지어내 문장에 끼워 넣는 것을 막는다.
- * - 실행할 수 있는 제안인지(어댑터 기능, 실행 상태), 중복인지, API 쿼터를 넘지 않는지 확인한다.
+ * - 문장에 쓸 수 있는 숫자는 검증을 통과한 claims 값뿐이다. 단위 변환(만·배·%)과 한글 수사는 쓸 수 없다.
+ * - 실행 대상(쿼리, 재실행 번호)은 인용한 근거와 일치해야 한다. 제목과 실제 실행 대상이 어긋나는 것을 막는다.
+ * - 실행할 수 있는지, 중복인지(사람이 거절한 이력 포함), API 쿼터를 넘지 않는지 확인한다.
  *
- * 하나라도 실패하면 제안은 blocked가 되고 사람에게 승인 요청이 가지 않는다.
- * 실패한 이유는 그대로 남겨, 어떤 종류의 할루시네이션이 얼마나 생기는지 집계할 수 있게 한다.
+ * 하나라도 실패하면 blocked가 되고 사람에게 승인 요청이 가지 않는다.
+ * 레드팀 검토에서 재현된 우회 12가지가 test/agent.test.ts에 회귀 테스트로 있다 (docs/decisions/0004).
  */
 import type { Db } from '../db/database.ts';
 import type { Fact, GuardCheck, ProposalDraft, QueryKind } from '../schema.ts';
 import { proposalDraftSchema } from '../schema.ts';
-import { INSTAGRAM_HASHTAG_LIMIT, instagramHashtagsUsed, type Observation } from './observation.ts';
+import {
+  factById,
+  INSTAGRAM_HASHTAG_LIMIT,
+  instagramHashtagsUsed,
+  type Observation,
+} from './observation.ts';
 
 /** 에이전트가 실행을 제안할 수 있는 어댑터와 지원하는 쿼리 종류 */
 export const AGENT_ADAPTERS: Record<string, readonly QueryKind[]> = {
@@ -22,25 +28,89 @@ export const AGENT_ADAPTERS: Record<string, readonly QueryKind[]> = {
 };
 
 const RECENT_COLLECTION_HOURS = 24;
+const REJECTION_MEMORY_DAYS = 7;
 
 export interface GuardResult {
   passed: boolean;
   checks: GuardCheck[];
 }
 
-/** 문장에서 숫자를 뽑는다. 해시태그(#4, #top10)와 실행 번호 표기(#12)는 숫자 주장이 아니므로 뺀다. */
-export function extractNumbers(text: string): number[] {
-  const withoutTags = text.replace(/#[\p{L}\p{N}_]+/gu, ' ');
-  return [...withoutTags.matchAll(/\d[\d,]*(?:\.\d+)?/g)].map((m) =>
-    Number(m[0].replaceAll(',', '')),
-  );
+export interface GuardOptions {
+  /** 승인 시점 재검증에서 자기 자신을 중복으로 세지 않도록 뺀다 */
+  excludeProposalId?: number;
 }
+
+/* ── 정규화 ─────────────────────────────────────────────────────── */
+
+/** 전각 숫자(１２０)와 호환 문자를 일반 형태로 바꾼다 */
+const nfkc = (text: string) => text.normalize('NFKC');
+
+/** 쿼리 값을 저장·비교 기준 형태로 맞춘다. 대소문자, 앞뒤 공백, # 때문에 중복 검사를 빠져나가지 못하게 한다. */
+export function normalizeQueryValue(kind: QueryKind, value: string): string {
+  const base = nfkc(value).trim().toLowerCase();
+  return kind === 'hashtag'
+    ? base.replace(/^#+/, '').replace(/\s+/g, '')
+    : base.replace(/\s+/g, ' ');
+}
+
+/** 키워드를 해시태그 형태로 바꾼다 ("fire noodle" → "firenoodle"). 키워드 근거를 해시태그 사실과 맞출 때 쓴다. */
+const asTag = (value: string) => value.replace(/\s+/g, '');
+
+function normalizeDraft(draft: ProposalDraft): ProposalDraft {
+  return {
+    ...draft,
+    title: nfkc(draft.title).trim(),
+    rationale: nfkc(draft.rationale).trim(),
+    queryValue:
+      draft.queryValue !== null && draft.queryKind !== null
+        ? normalizeQueryValue(draft.queryKind, draft.queryValue)
+        : draft.queryValue,
+  };
+}
+
+/* ── 문장 속 숫자 ───────────────────────────────────────────────── */
+
+const RUN_REFERENCE = /(?:실행|run)\s*#(\d+)/giu;
+/** 문자로 시작하는 해시태그만 지운다. "#240%"나 "#1위"처럼 #으로 숫자를 숨기는 것은 숫자로 본다. */
+const WORD_HASHTAG = /#[\p{L}_][\p{L}\p{N}_]*/gu;
+/** 숫자 뒤에 붙으면 다른 값으로 바뀌는 단위·비율 표현. 이런 값은 SQL이 계산한 적이 없다. */
+const DERIVED_SUFFIX = /\d[\d,.]*\s*(?:만|억|천|배|%|퍼센트|프로|x\b|k\b|m\b)/iu;
+/** 한글로 쓴 수. 형식이 다양해 검증할 수 없으므로 쓰지 못하게 한다. */
+const KOREAN_NUMERAL =
+  /(?:[일이삼사오육칠팔구]?[십백천만억]+[일이삼사오육칠팔구십백천만억]*|한|두|세|네|다섯|여섯|일곱|여덟|아홉|열|스무|수십|수백|수천|수만)\s*(?:건|회|배|개|명|퍼센트|프로|%)/u;
+
+export interface NumberScan {
+  numbers: number[];
+  runReferences: number[];
+  derived: string | null;
+  koreanNumeral: string | null;
+}
+
+export function scanNumbers(rawText: string): NumberScan {
+  const text = nfkc(rawText);
+  const runReferences = [...text.matchAll(RUN_REFERENCE)].map((m) => Number(m[1]));
+  const rest = text.replace(RUN_REFERENCE, ' ').replace(WORD_HASHTAG, ' ');
+  return {
+    numbers: [...rest.matchAll(/\d[\d,]*(?:\.\d+)?/g)].map((m) => Number(m[0].replaceAll(',', ''))),
+    runReferences,
+    derived: DERIVED_SUFFIX.exec(rest)?.[0] ?? null,
+    koreanNumeral: KOREAN_NUMERAL.exec(rest)?.[0] ?? null,
+  };
+}
+
+/** 이전 버전과의 호환을 위한 단순 추출 (테스트에서 사용) */
+export function extractNumbers(text: string): number[] {
+  return scanNumbers(text).numbers;
+}
+
+/* ── 검증 ───────────────────────────────────────────────────────── */
 
 export function verifyProposal(
   db: Db,
   observation: Observation,
   raw: unknown,
   now: Date = new Date(),
+  options: GuardOptions = {},
 ): GuardResult & { draft: ProposalDraft | null } {
   const parsed = proposalDraftSchema.safeParse(raw);
   if (!parsed.success) {
@@ -56,16 +126,25 @@ export function verifyProposal(
       ],
     };
   }
-  const draft = parsed.data;
-  const facts = new Map<string, Fact>(observation.facts.map((fact) => [fact.factId, fact]));
+  const draft = normalizeDraft(parsed.data);
+
+  // 관찰 목록에 없는 근거도 DB에서 직접 찾는다. 승인 시점 재검증에서 근거가 "최근 N개" 범위 밖으로 밀려나도
+  // 할루시네이션으로 오판하지 않게 하기 위해서다.
+  const known = new Map<string, Fact>(observation.facts.map((fact) => [fact.factId, fact]));
+  const facts = new Map<string, Fact>();
+  for (const id of draft.evidence) {
+    const fact = known.get(id) ?? factById(db, id, now);
+    if (fact) facts.set(id, fact);
+  }
 
   const checks: GuardCheck[] = [
     { check: 'schema', passed: true, detail: '형식 일치' },
     checkEvidence(draft, facts),
     checkClaims(draft, facts),
-    checkGroundedNumbers(draft, facts),
+    checkGroundedNumbers(draft),
+    checkTarget(draft),
     checkCapability(db, draft),
-    checkDuplicate(db, draft, now),
+    checkDuplicate(db, draft, now, options),
     checkQuota(db, draft, now),
   ];
   return { passed: checks.every((c) => c.passed), checks, draft };
@@ -77,12 +156,8 @@ function checkEvidence(draft: ProposalDraft, facts: Map<string, Fact>): GuardChe
   }
   const missing = draft.evidence.filter((id) => !facts.has(id));
   return missing.length === 0
-    ? {
-        check: 'evidence',
-        passed: true,
-        detail: `근거 ${draft.evidence.length}개 모두 관찰 사실에 있음`,
-      }
-    : { check: 'evidence', passed: false, detail: `관찰 사실에 없는 근거: ${missing.join(', ')}` };
+    ? { check: 'evidence', passed: true, detail: `근거 ${draft.evidence.length}개 모두 DB에 있음` }
+    : { check: 'evidence', passed: false, detail: `DB에 없는 근거: ${missing.join(', ')}` };
 }
 
 function checkClaims(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck {
@@ -95,8 +170,9 @@ function checkClaims(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck
     const actual = facts.get(claim.factId)?.values[claim.field];
     if (actual === undefined)
       problems.push(`${claim.factId}.${claim.field} 값이 없음 (주장 ${claim.value})`);
-    else if (actual !== claim.value)
+    else if (actual !== claim.value) {
       problems.push(`${claim.factId}.${claim.field}: 주장 ${claim.value}, 실제 ${actual}`);
+    }
   }
   return problems.length === 0
     ? {
@@ -107,27 +183,68 @@ function checkClaims(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck
     : { check: 'claims', passed: false, detail: problems.join(' / ') };
 }
 
-function checkGroundedNumbers(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck {
-  const allowed = new Set<number>(
-    draft.evidence.flatMap((id) => Object.values(facts.get(id)?.values ?? {})),
+/**
+ * 문장에 쓴 숫자는 claims에 적은 값이어야 한다(값 자체는 checkClaims가 SQL과 대조한다).
+ * "인용한 사실의 아무 필드 값"까지 허용하던 이전 규칙은 다른 필드·다른 사실의 숫자를 빌려 쓰는 우회를 허용했다.
+ */
+function checkGroundedNumbers(draft: ProposalDraft): GuardCheck {
+  const scan = scanNumbers(`${draft.title} ${draft.rationale}`);
+  const problems: string[] = [];
+  if (scan.derived) problems.push(`단위 변환·비율 표현은 쓸 수 없음: "${scan.derived}"`);
+  if (scan.koreanNumeral) problems.push(`한글로 쓴 수는 검증할 수 없음: "${scan.koreanNumeral}"`);
+
+  const allowed = new Set(draft.claims.map((claim) => claim.value));
+  const ungrounded = [...new Set(scan.numbers.filter((n) => !allowed.has(n)))];
+  if (ungrounded.length > 0) problems.push(`claims에 없는 숫자: ${ungrounded.join(', ')}`);
+
+  const citedRuns = new Set(
+    draft.evidence.filter((id) => id.startsWith('run:')).map((id) => Number(id.slice(4))),
   );
-  const ungrounded = extractNumbers(`${draft.title} ${draft.rationale}`).filter(
-    (n) => !allowed.has(n),
-  );
-  return ungrounded.length === 0
-    ? { check: 'grounded_numbers', passed: true, detail: '문장 속 숫자가 모두 근거 사실의 값' }
-    : {
-        check: 'grounded_numbers',
-        passed: false,
-        detail: `근거에 없는 숫자: ${[...new Set(ungrounded)].join(', ')}`,
-      };
+  const unknownRuns = scan.runReferences.filter((id) => !citedRuns.has(id));
+  if (unknownRuns.length > 0)
+    problems.push(`근거로 인용하지 않은 실행 번호: #${unknownRuns.join(', #')}`);
+
+  return problems.length === 0
+    ? { check: 'grounded_numbers', passed: true, detail: '문장 속 숫자가 모두 검증된 claims 값' }
+    : { check: 'grounded_numbers', passed: false, detail: problems.join(' / ') };
+}
+
+/** 실행 대상이 근거와 맞는지. 제목은 "#recipe 수집"인데 실제 쿼리는 다른 키워드인 경우를 막는다. */
+function checkTarget(draft: ProposalDraft): GuardCheck {
+  const pass = (detail: string): GuardCheck => ({ check: 'target', passed: true, detail });
+  const fail = (detail: string): GuardCheck => ({ check: 'target', passed: false, detail });
+
+  if (draft.kind === 'collect_query') {
+    if (!draft.queryValue) return fail('수집할 쿼리가 없습니다');
+    const tag = asTag(draft.queryValue);
+    const grounded = draft.evidence.some(
+      (id) => id === `hashtag:${tag}` || (id.startsWith('related:') && id.endsWith(`>${tag}`)),
+    );
+    if (!grounded) {
+      return fail(
+        `실행할 쿼리 "${draft.queryValue}"가 근거(hashtag:${tag} 또는 related:*>${tag})에 없습니다`,
+      );
+    }
+    if (!draft.title.toLowerCase().replace(/\s+/g, '').includes(tag)) {
+      return fail(`제목에 실제 실행 대상 "${draft.queryValue}"가 드러나지 않습니다`);
+    }
+    return pass(`실행 대상 "${draft.queryValue}"가 근거와 제목에 일치`);
+  }
+
+  if (draft.kind === 'retry_run') {
+    if (draft.runId === null) return fail('재실행할 실행 번호가 없습니다');
+    return draft.evidence.includes(`run:${draft.runId}`)
+      ? pass(`재실행 대상 #${draft.runId}이 근거에 있음`)
+      : fail(`재실행 대상 run:${draft.runId}이 근거에 없습니다`);
+  }
+  return pass('실행 대상 없음 (운영 조치)');
 }
 
 function checkCapability(db: Db, draft: ProposalDraft): GuardCheck {
   const fail = (detail: string): GuardCheck => ({ check: 'capability', passed: false, detail });
 
   if (draft.kind === 'collect_query') {
-    if (!draft.adapterId || !draft.queryKind || !draft.queryValue?.trim()) {
+    if (!draft.adapterId || !draft.queryKind || !draft.queryValue) {
       return fail('수집 제안에는 어댑터, 쿼리 종류, 쿼리 값이 모두 있어야 합니다');
     }
     const supported = AGENT_ADAPTERS[draft.adapterId];
@@ -181,42 +298,86 @@ function checkCapability(db: Db, draft: ProposalDraft): GuardCheck {
     : { check: 'capability', passed: true, detail: '실행 없이 사람의 확인만 필요한 제안' };
 }
 
-function checkDuplicate(db: Db, draft: ProposalDraft, now: Date): GuardCheck {
+function checkDuplicate(
+  db: Db,
+  draft: ProposalDraft,
+  now: Date,
+  options: GuardOptions,
+): GuardCheck {
+  const sameTarget = `kind = :kind
+      AND COALESCE(adapter_id, '') = COALESCE(:adapterId, '')
+      AND COALESCE(query_kind, '') = COALESCE(:queryKind, '')
+      AND COALESCE(query_value, '') = COALESCE(:queryValue, '')
+      AND COALESCE(run_id, -1) = COALESCE(:runId, -1)
+      AND (kind <> 'operator_action' OR title = :title)
+      AND id <> COALESCE(:excludeId, -1)`;
+  const params = {
+    kind: draft.kind,
+    adapterId: draft.adapterId,
+    queryKind: draft.queryKind,
+    queryValue: draft.queryValue,
+    runId: draft.runId,
+    title: draft.title,
+    excludeId: options.excludeProposalId ?? null,
+  };
+
   const open = db
     .prepare(
-      `SELECT id FROM agent_proposal
-        WHERE status IN ('pending', 'approved') AND kind = ?
-          AND COALESCE(adapter_id, '') = COALESCE(?, '') AND COALESCE(lower(query_value), '') = COALESCE(lower(?), '')
-          AND COALESCE(run_id, -1) = COALESCE(?, -1)
-          AND (kind <> 'operator_action' OR title = ?)`,
+      `SELECT id FROM agent_proposal WHERE status IN ('pending', 'approved') AND ${sameTarget}`,
     )
-    .get(draft.kind, draft.adapterId, draft.queryValue, draft.runId, draft.title) as
-    { id: number } | undefined;
+    .get(params) as { id: number } | undefined;
   if (open)
     return {
       check: 'duplicate',
       passed: false,
-      detail: `같은 내용의 제안 #${open.id}이 이미 검토 중입니다`,
+      detail: `같은 대상의 제안 #${open.id}이 이미 검토 중입니다`,
     };
+
+  // 사람의 거절을 기억한다: 최근에 거절한 대상을 같은 내용으로 다시 올리지 못하게 한다
+  const rejectedSince = new Date(now.getTime() - REJECTION_MEMORY_DAYS * 86_400_000).toISOString();
+  const rejected = db
+    .prepare(
+      `SELECT id, review_note FROM agent_proposal
+        WHERE status = 'rejected' AND reviewed_at >= :since AND ${sameTarget}
+        ORDER BY id DESC LIMIT 1`,
+    )
+    .get({ ...params, since: rejectedSince }) as { id: number; review_note: string } | undefined;
+  if (rejected) {
+    return {
+      check: 'duplicate',
+      passed: false,
+      detail: `최근 ${REJECTION_MEMORY_DAYS}일 안에 사람이 거절한 대상입니다 (#${rejected.id}: ${rejected.review_note})`,
+    };
+  }
 
   if (draft.kind === 'collect_query' && draft.adapterId && draft.queryValue) {
     const since = new Date(now.getTime() - RECENT_COLLECTION_HOURS * 3_600_000).toISOString();
     const recent = db
       .prepare(
-        `SELECT id FROM collection_run
-          WHERE adapter_id = ? AND query_kind = ? AND lower(query_value) = lower(?) AND started_at >= ?
-          ORDER BY id DESC LIMIT 1`,
+        `SELECT id, query_value FROM collection_run
+          WHERE adapter_id = ? AND query_kind = ? AND started_at >= ?
+          ORDER BY id DESC`,
       )
-      .get(draft.adapterId, draft.queryKind, draft.queryValue, since) as { id: number } | undefined;
-    if (recent) {
+      .all(draft.adapterId, draft.queryKind, since) as Array<{ id: number; query_value: string }>;
+    // 저장된 쿼리도 같은 규칙으로 정규화해 비교한다
+    const hit = recent.find(
+      (run) =>
+        draft.queryKind &&
+        normalizeQueryValue(draft.queryKind, run.query_value) === draft.queryValue,
+    );
+    if (hit) {
       return {
         check: 'duplicate',
         passed: false,
-        detail: `최근 ${RECENT_COLLECTION_HOURS}시간 안에 같은 쿼리를 수집했습니다 (실행 #${recent.id})`,
+        detail: `최근 ${RECENT_COLLECTION_HOURS}시간 안에 같은 쿼리를 수집했습니다 (실행 #${hit.id})`,
       };
     }
   }
-  return { check: 'duplicate', passed: true, detail: '검토 중인 같은 제안이나 최근 수집 없음' };
+  return {
+    check: 'duplicate',
+    passed: true,
+    detail: '검토 중이거나 거절된 같은 제안, 최근 수집 없음',
+  };
 }
 
 function checkQuota(db: Db, draft: ProposalDraft, now: Date): GuardCheck {
@@ -227,9 +388,10 @@ function checkQuota(db: Db, draft: ProposalDraft, now: Date): GuardCheck {
   ) {
     return { check: 'quota', passed: true, detail: '해당 없음' };
   }
-  const used = new Set(instagramHashtagsUsed(db, now));
-  const tag = draft.queryValue.replace(/^#/, '').toLowerCase();
-  const after = used.has(tag) ? used.size : used.size + 1;
+  const used = new Set(
+    instagramHashtagsUsed(db, now).map((tag) => normalizeQueryValue('hashtag', tag)),
+  );
+  const after = used.has(draft.queryValue) ? used.size : used.size + 1;
   return after <= INSTAGRAM_HASHTAG_LIMIT
     ? {
         check: 'quota',

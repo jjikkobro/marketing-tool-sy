@@ -176,6 +176,7 @@ export const guardCheckSchema = z.object({
     'evidence',
     'claims',
     'grounded_numbers',
+    'target',
     'capability',
     'duplicate',
     'quota',
@@ -214,6 +215,8 @@ export const proposalSchema = proposalDraftSchema.extend({
   reviewNote: z.string().nullable(),
   reviewedAt: z.iso.datetime().nullable(),
   resultRunId: z.number().int().nullable(),
+  /** 승인 후 실행 중 난 오류. 사람이 쓴 결정 사유(reviewNote)를 덮어쓰지 않도록 따로 둔다. */
+  executionError: z.string().nullable(),
 });
 export type Proposal = z.infer<typeof proposalSchema>;
 

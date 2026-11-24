@@ -4,7 +4,7 @@ import { Fragment } from 'react';
 const STEPS = [
   { title: '관찰', detail: 'SQL로 계산한 사실만' },
   { title: 'LLM 제안', detail: 'factId로 근거 인용' },
-  { title: '가드 7검사', detail: '숫자는 SQL과 대조' },
+  { title: '가드 8검사', detail: '숫자·대상을 SQL과 대조' },
   { title: '사람의 결정', detail: '승인 · 거절 · 확인' },
   { title: '실행', detail: '승인 시 재검증 후' },
   { title: '기록', detail: '누가·왜·결과' },

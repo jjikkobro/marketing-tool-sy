@@ -20,8 +20,16 @@ export function ProposalsPage() {
   const [reviewer, setReviewer] = useState(() => localStorage.getItem(REVIEWER_KEY) ?? '');
 
   const mutation = useMutation({
-    mutationFn: (input: { id: Proposal['id']; decision: Decision; note: string }) =>
-      decide(input.id, input.decision, { reviewer, note: input.note.trim() || undefined }),
+    mutationFn: (input: { id: Proposal['id']; decision: Decision; note: string }) => {
+      const token = snapshot.data?.reviewToken;
+      if (!token) throw new Error('검토 API에 연결되어 있지 않습니다');
+      return decide(
+        input.id,
+        input.decision,
+        { reviewer, note: input.note.trim() || undefined },
+        token,
+      );
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: snapshotQuery().queryKey }),
   });
 
