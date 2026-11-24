@@ -1,10 +1,16 @@
 /**
  * 검색 API(Tavily) 어댑터와 공식 API 비활성화 규칙 (docs/decisions/0006)
  * 응답 형식은 Tavily 문서(POST /search)의 필드 이름을 따르고, URL과 값만 가상으로 채웠다.
- * - published_date는 RFC 1123 형식이고 null일 수 있다
+ * - published_date는 RFC 1123 형식이고 null일 수 있다 (실제 TikTok·Instagram 결과에는 거의 없다, 0002 §9)
+ * - 게시물 ID는 생성 시각을 담도록 계산했다 (TikTok: 상위 32비트 초, Instagram: 단축 코드 → 미디어 ID)
  */
 import { afterEach, describe, expect, it } from 'vitest';
-import { classifySearchError, parsePostUrl, webSearchAdapter } from '../src/adapters/web-search.ts';
+import {
+  classifySearchError,
+  parsePostUrl,
+  postedAtFromId,
+  webSearchAdapter,
+} from '../src/adapters/web-search.ts';
 import { collectUnavailableReason, sourcesFromEnv } from '../src/agent/availability.ts';
 import { verifyProposal } from '../src/agent/guard.ts';
 import { buildObservation } from '../src/agent/observation.ts';
@@ -30,7 +36,7 @@ function tavilyBody(results: Array<Record<string, unknown>>) {
 const TIKTOK_RESULTS = [
   {
     title: 'Spicy noodle challenge #spicynoodles #foodtok',
-    url: 'https://www.tiktok.com/@demo_creator_01/video/7400000000000000001?lang=en',
+    url: 'https://www.tiktok.com/@demo_creator_01/video/7710933457148325945?lang=en',
     content: 'Trying the spicy noodle challenge for the first time #spicynoodles',
     score: 0.9,
     published_date: 'Sat, 22 Nov 2026 10:00:00 GMT',
@@ -44,7 +50,7 @@ const TIKTOK_RESULTS = [
   },
   {
     title: 'No date',
-    url: 'https://www.tiktok.com/@demo_creator_03/video/7400000000000000003',
+    url: 'https://www.tiktok.com/@demo_creator_03/video/7397954036328050745',
     content: 'no date',
     score: 0.4,
     published_date: null,
@@ -54,7 +60,12 @@ const TIKTOK_RESULTS = [
 describe('검색 API 어댑터', () => {
   it('게시물 URL만 받아들이고, 지표는 0이 아니라 null로 둔다', async () => {
     const transport = scriptedTransport([ok(tavilyBody(TIKTOK_RESULTS))]);
-    const adapter = webSearchAdapter({ transport, apiKey: 'tvly-test', platform: 'tiktok' });
+    const adapter = webSearchAdapter({
+      transport,
+      apiKey: 'tvly-test',
+      platform: 'tiktok',
+      now: () => now,
+    });
     const page = adapter.parsePage(
       await adapter.fetchPage({ kind: 'keyword', value: 'spicy noodle challenge' }, null),
       { kind: 'keyword', value: 'spicy noodle challenge' },
@@ -63,15 +74,20 @@ describe('검색 API 어댑터', () => {
     expect(page.items).toHaveLength(1);
     expect(page.items[0]).toMatchObject({
       platform: 'tiktok',
-      platformContentId: '7400000000000000001',
-      url: 'https://www.tiktok.com/@demo_creator_01/video/7400000000000000001',
+      platformContentId: '7710933457148325945',
+      url: 'https://www.tiktok.com/@demo_creator_01/video/7710933457148325945',
       creatorHandle: 'demo_creator_01',
       mediaType: 'video',
       publishedAt: '2026-11-22T10:00:00.000Z',
       metrics: { views: null, likes: null, comments: null, shares: null },
     });
     expect(page.items[0]?.hashtags).toEqual(['spicynoodles', 'foodtok']);
-    expect(page.rejected.map((r) => r.reason)).toEqual(['게시물 URL이 아님', '게시일 없음']);
+    // 프로필 페이지·기간 밖 게시물은 정상적인 걸러냄이라 오류(rejected)가 아니다 (0002 §10)
+    expect(page.rejected).toEqual([]);
+    expect(page.skipped?.map((r) => r.reason)).toEqual([
+      '게시물 URL이 아님',
+      '최근 30일보다 오래됨',
+    ]);
 
     // 요청: 도메인 제한(= site:tiktok.com), 최근 1주, 게시일 포함, 키는 헤더로만
     const request = transport.requests[0];
@@ -84,6 +100,38 @@ describe('검색 API 어댑터', () => {
       include_published_date: true,
       max_results: 20,
     });
+  });
+
+  it('게시일은 ID에서 계산하고, 검색 API의 날짜와 2일 넘게 다르면 구조 변화 경고를 남긴다', () => {
+    expect(postedAtFromId('tiktok', '7710933457148325945', now)?.toISOString()).toBe(
+      '2026-11-22T10:00:00.000Z',
+    );
+    expect(postedAtFromId('instagram', 'Df7B7sTgAMJ', now)?.toISOString().slice(0, 16)).toBe(
+      '2026-11-19T12:00',
+    );
+    // 말이 안 되는 시각(2016년 이전)은 지어내지 않고 null
+    expect(postedAtFromId('tiktok', '100000000000000000', now)).toBeNull();
+    expect(postedAtFromId('instagram', 'AAAA', now)).toBeNull();
+
+    const adapter = webSearchAdapter({
+      transport: scriptedTransport([]),
+      apiKey: 'k',
+      platform: 'tiktok',
+      now: () => now,
+    });
+    const page = adapter.parsePage(
+      tavilyBody([
+        {
+          title: 't',
+          url: 'https://www.tiktok.com/@demo_creator_05/video/7710160363035045945',
+          content: 'c',
+          published_date: 'Sat, 01 Nov 2026 00:00:00 GMT',
+        },
+      ]),
+      { kind: 'keyword', value: 'x' },
+    );
+    expect(page.items).toHaveLength(1);
+    expect(page.warnings).toEqual([expect.objectContaining({ kind: 'schema_drift' })]);
   });
 
   it('Instagram 게시물·릴스 URL에서 단축 코드를 뽑고, 다른 도메인은 거부한다', () => {
@@ -111,13 +159,16 @@ describe('검색 API 어댑터', () => {
         transport: scriptedTransport([ok(body)]),
         apiKey: 'tvly-test',
         platform: 'tiktok',
+        now: () => now,
       });
     const query = { kind: 'keyword', value: 'spicy noodle challenge' } as const;
     const first = await runCollection(db, adapter(), query, { now: () => now });
     const second = await runCollection(db, adapter(), query, { now: () => now });
 
     expect(first.counters.inserted).toBe(1);
-    expect(first.counters.rejected).toBe(2);
+    expect(first.counters.rejected).toBe(0);
+    // 걸러낸 항목은 오류 기록에 남지 않는다
+    expect(db.prepare('SELECT COUNT(*) AS n FROM collection_error').get()).toEqual({ n: 0 });
     expect(second.counters.inserted).toBe(0);
     // 마이그레이션 005: source CHECK가 web-search를 받아들인다
     expect(searchContents(db, {}).map((c) => c.source)).toEqual(['web-search']);

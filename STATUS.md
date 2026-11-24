@@ -40,8 +40,8 @@
 ## 3. 작업 보드
 
 ### 지원자가 직접 해야 할 일 (에이전트가 대신할 수 없음)
-0-1. [ ] **YouTube API 키 발급**: Google Cloud Console → YouTube Data API v3 사용 설정 → API 키 → `apps/collector/.env`의 YOUTUBE_API_KEY. 받으면 실제 수집을 검증한다 (아직 미검증)
-0-1b. [ ] **Tavily API 키 발급**: https://tavily.com 가입(무료 월 1,000회, 카드 불필요) → `apps/collector/.env`의 TAVILY_API_KEY. 받으면 검색 결과에 게시일이 얼마나 붙는지 먼저 확인한다 (0006 미확인 항목)
+0-1. [x] **YouTube API 키 발급** (2026-11-25, 실제 수집 50건 확인)
+0-1b. [x] **Tavily API 키 발급** (2026-11-25, 게시일 문제 발견·수정 후 TikTok·Instagram 실제 수집 확인, 0002 §9)
 0-2. [ ] **Render 배포**: README의 Deploy to Render → ANTHROPIC_API_KEY, YOUTUBE_API_KEY, TAVILY_API_KEY 입력. 제출 기간에는 starter 플랜(잠들지 않음) 권장. 배포 주소를 README 상단에 추가
 0-3. [ ] `apps/web/.env`의 키 삭제 (키는 `apps/collector/.env`로 옮겼다)
 0. [ ] (선택) **GitHub Pages 활성화**: 저장소 Settings → Pages → Source를 "GitHub Actions"로 변경 → Actions에서 "Deploy to GitHub Pages" 재실행. 주소: https://jjikkobro.github.io/marketing-tool-sy/
@@ -106,6 +106,19 @@
 ## 6. 인계 로그
 
 새 항목을 맨 위에 추가한다.
+
+### 2026-11-25 (8) · Claude Code (Opus 5.5)
+- **한 일**: 지원자가 넣은 실제 키 3개(Claude, YouTube, Tavily)로 전체 흐름을 돌리고, 드러난 문제 3건을 고쳤다
+  - 검색 결과에 게시일이 거의 없어 0건이 됐다 → 게시일을 게시물 ID에서 계산하고, 30일 필터를 직접 건다. 검색 API 날짜와 어긋나면 구조 변화 경고를 남긴다 (0002 §9)
+  - 정상적인 걸러냄(프로필 URL, 기간 밖 게시물)이 "응답 형식 오류"로 기록돼 Claude가 엉뚱한 점검을 제안했다 → `skipped`를 `rejected`와 분리했다 (0002 §10)
+  - 근거로 인용한 영상 제목 속 숫자("Part 3") 때문에 기획안이 차단됐다 → DB 원문과 글자 그대로 같은 따옴표 인용만 숫자 검사에서 뺀다 (0002 §10)
+- **확인**
+  - 라이브 서버 시드: YouTube 50건, TikTok 40건, Instagram 10건이 실제 데이터로 들어갔다
+  - Claude 제안 5건이 가드를 모두 통과했다
+  - 웹 API로 승인하자 실제 검색이 실행돼 TikTok 11건이 저장됐다 (실행 #6)
+  - 스크린샷에서 콘솔 오류 0
+  - 테스트 118개 통과. 수정 두 건은 되돌리면 실패하는 것을 확인했다
+- **남은 것**: Render 배포, 배포 주소에서 같은 확인
 
 ### 2026-11-25 (7) · Claude Code (Opus 5.5)
 - **한 일**

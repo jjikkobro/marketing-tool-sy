@@ -32,7 +32,14 @@ export interface PageWarning {
 
 export interface ParsedPage {
   items: SocialContent[];
+  /** 수집해야 했는데 형식이 틀려 버린 항목. 데이터 손실이라 운영 화면에 경고로 남는다 */
   rejected: Rejection[];
+  /**
+   * 기준에 맞지 않아 일부러 거른 항목 (검색 결과 속 프로필 페이지, 기간 밖 게시물 등).
+   * 손실이 아니라 정상 동작이라 오류로 기록하지 않는다. 실제 실행에서 이것을 오류로 기록했더니
+   * AI 계획자가 "응답 형식 오류 25건"으로 읽고 엉뚱한 점검을 제안했다 (0002 §10).
+   */
+  skipped?: Rejection[];
   warnings: PageWarning[];
   nextCursor: string | null;
 }

@@ -178,7 +178,7 @@ export function verifyProposal(
     { check: 'schema', passed: true, detail: '형식 일치' },
     checkEvidence(draft, facts),
     checkClaims(draft, facts),
-    checkGroundedNumbers(draft),
+    checkGroundedNumbers(draft, facts),
     checkTarget(draft),
     checkCapability(db, draft),
     checkDuplicate(db, draft, now, options),
@@ -224,12 +224,33 @@ function checkClaims(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck
  * 문장에 쓴 숫자는 claims에 적은 값이어야 한다(값 자체는 checkClaims가 SQL과 대조한다).
  * "인용한 사실의 아무 필드 값"까지 허용하던 이전 규칙은 다른 필드·다른 사실의 숫자를 빌려 쓰는 우회를 허용했다.
  */
-function checkGroundedNumbers(draft: ProposalDraft): GuardCheck {
+/** 따옴표로 감싼 인용. 짧은 인용('3')으로 숫자를 숨기지 못하게 8자 이상, 글자가 섞인 것만 본다 */
+const QUOTED = /['"‘’“”「」]([^'"‘’“”「」]{8,})['"‘’“”「」]/g;
+
+/**
+ * 근거로 인용한 사실의 원문(영상 제목 등)을 그대로 따옴표로 옮긴 부분은 숫자 검사에서 뺀다.
+ * 실제 Claude 출력에서 'Ranking … (Part 3)' 같은 제목 인용의 "3"이 근거 없는 숫자로 차단됐다 (0002 §10).
+ * DB에 있는 원문과 글자 그대로 같을 때만 빼므로, 지어낸 숫자를 따옴표로 감싸 통과시킬 수는 없다.
+ */
+function stripVerifiedQuotes(text: string, citedTexts: readonly string[]): string {
+  return text.replace(QUOTED, (whole, inner: string) => {
+    const quote = inner.trim();
+    return /\p{L}/u.test(quote) && citedTexts.some((source) => source.includes(quote))
+      ? ' '
+      : whole;
+  });
+}
+
+function checkGroundedNumbers(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck {
   const allowed = new Set(draft.claims.map((claim) => claim.value));
   const problems: string[] = [];
+  const citedTexts = draft.evidence.flatMap((id) => {
+    const fact = facts.get(id);
+    return fact ? [fact.description] : [];
+  });
 
   // 1) 제목·근거 문장: 숫자는 검증된 claims 값만 쓸 수 있다
-  const scan = scanNumbers(`${draft.title} ${draft.rationale}`);
+  const scan = scanNumbers(stripVerifiedQuotes(`${draft.title} ${draft.rationale}`, citedTexts));
   if (scan.derived) problems.push(`단위 변환·비율 표현은 쓸 수 없음: "${scan.derived}"`);
   if (scan.koreanNumeral) problems.push(`한글로 쓴 수는 검증할 수 없음: "${scan.koreanNumeral}"`);
   const ungrounded = [...new Set(scan.numbers.filter((n) => !allowed.has(n)))];

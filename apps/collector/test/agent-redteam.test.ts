@@ -48,6 +48,26 @@ describe('레드팀: 숫자 가드 우회', () => {
     expect(failed(await seeded(), base)).toEqual([]);
   });
 
+  it('근거 원문(영상 제목 등)을 그대로 인용한 따옴표 안의 숫자는 허용하고, 지어낸 인용은 막는다 (0002 §10)', async () => {
+    const db = await seeded();
+    const quote = "'Instagram Graph API: 7일 동안 조회할 수 있는 고유 해시태그 수'";
+    const withQuote = (text: string, evidence: string[]): ProposalDraft => ({
+      ...base,
+      rationale: `${base.rationale} ${text} 기준도 확인했습니다.`,
+      evidence,
+    });
+    const cited = [...base.evidence, 'quota:instagram-hashtags'];
+
+    // DB의 사실 설명과 글자 그대로 같은 인용 → 통과
+    expect(failed(db, withQuote(quote, cited))).toEqual([]);
+    // 같은 인용이라도 그 사실을 근거로 인용하지 않았으면 → 차단
+    expect(failed(db, withQuote(quote, base.evidence))).toContain('grounded_numbers');
+    // 숫자만 바꾼 지어낸 인용 → 차단
+    expect(failed(db, withQuote(quote.replace('7일', '9일'), cited))).toContain('grounded_numbers');
+    // 짧은 인용으로 숫자를 숨기는 것 → 차단
+    expect(failed(db, withQuote("'120'", cited))).toContain('grounded_numbers');
+  });
+
   it('[A] 건수를 단위만 바꿔 "12만 회"로 쓰면 막는다', async () => {
     expect(
       failed(await seeded(), { ...base, rationale: '조회수 12만 회를 기록했습니다.' }),

@@ -14,10 +14,18 @@
  * - 응답 results[]: title, url, content(짧은 설명), score, published_date("Tue, 11 Mar 2025 17:00:00 GMT" 형식, null 가능)
  * - 오류: 401 키 오류, 429 요청 한도(Retry-After), 432 키·요금제 한도, 433 종량제 한도, 434 일시적 용량 부족
  *
+ * 실제 키로 돌려 보고 알게 된 것 (2026-11-25, 0002 §9)
+ * - TikTok·Instagram 결과에는 published_date가 거의 없다 (20건 중 0~2건).
+ *   filter_by_published_date를 켜면 결과가 0건이 된다.
+ * - time_range를 줘도 몇 년 전 게시물이 섞여 나온다. 호출마다 결과가 달라진다.
+ * → 게시일은 게시물 ID에서 계산하고(postedAtFromId), 최근 30일 필터는 여기서 직접 건다.
+ *   Tavily가 날짜를 준 결과와 ID에서 계산한 날짜가 같은 날로 맞는 것을 실제 응답 4건에서 확인했다.
+ *   둘이 2일 넘게 다르면 ID 구조가 바뀌었을 수 있으므로 경고를 남긴다 (구조 변화 감지).
+ *
  * 이 경로의 한계 (화면과 README에 그대로 쓴다)
  * - 조회수·좋아요는 없다. 지표는 모두 null(—)이다. 0으로 채우지 않는다.
  * - 검색 엔진이 색인한 게시물만 나온다. 플랫폼 전체가 아니다.
- * - 게시일이 없는 결과는 날짜를 지어내지 않고 버린다 (거부 사유로 기록).
+ * - ID에서 게시일을 계산하는 방식은 공식 문서에 없는 ID 구조에 기대고 있다. 그래서 위 대조 경고를 둔다.
  */
 import { z } from 'zod';
 import { CollectorError } from '../core/errors.ts';
@@ -25,6 +33,7 @@ import type { CollectQuery, Platform, SocialContent } from '../schema.ts';
 import { parseRetryAfter } from './http.ts';
 import {
   truncateSample,
+  type PageWarning,
   type ParsedPage,
   type Rejection,
   type SourceAdapter,
@@ -35,6 +44,15 @@ const ENDPOINT = 'https://api.tavily.com/search';
 const MAX_RESULTS = 20;
 const HASHTAG_PATTERN = /#([\p{L}\p{N}_]+)/gu;
 const CAPTION_MAX = 500;
+/** 최근 게시물 기준. Tavily의 time_range가 믿을 만하게 걸러 주지 않아 직접 건다 */
+export const SEARCH_WINDOW_DAYS = 30;
+/** Tavily가 준 날짜와 ID에서 계산한 날짜가 이보다 많이 다르면 경고한다 */
+const DATE_MISMATCH_MS = 2 * 86_400_000;
+/** Instagram 미디어 ID의 시간 기준점 (2011-08-24, ID 상위 비트 = 이 시점부터의 ms) */
+const INSTAGRAM_EPOCH_MS = 1_314_220_021_721;
+const SHORTCODE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+/** 이보다 이른 시각이 나오면 ID 구조가 예상과 다른 것으로 본다 */
+const EARLIEST_PLAUSIBLE = Date.UTC(2016, 0, 1);
 
 export type SearchPlatform = Extract<Platform, 'tiktok' | 'instagram'>;
 
@@ -109,12 +127,39 @@ export function parsePostUrl(platform: SearchPlatform, raw: string): PostRef | n
   };
 }
 
+/**
+ * 게시물 ID에 들어 있는 생성 시각을 꺼낸다.
+ * - TikTok 영상 ID: 상위 32비트가 유닉스 초
+ * - Instagram 단축 코드: 64진수로 미디어 ID를 쓴 것. 미디어 ID의 23비트 위가 INSTAGRAM_EPOCH_MS 이후 ms
+ * 계산 결과가 말이 안 되면(2016년 이전, 미래) null을 돌려준다. 날짜를 지어내지 않는다.
+ */
+export function postedAtFromId(platform: SearchPlatform, id: string, now: Date): Date | null {
+  let ms: number;
+  if (platform === 'tiktok') {
+    if (!/^\d{15,20}$/.test(id)) return null;
+    ms = Number(BigInt(id) >> 32n) * 1000;
+  } else {
+    // 비공개 게시물 등에서 보이는 긴 코드는 앞 11자가 미디어 ID다
+    const code = id.slice(0, 11);
+    let value = 0n;
+    for (const char of code) {
+      const digit = SHORTCODE_ALPHABET.indexOf(char);
+      if (digit < 0) return null;
+      value = value * 64n + BigInt(digit);
+    }
+    ms = Number(value >> 23n) + INSTAGRAM_EPOCH_MS;
+  }
+  return ms < EARLIEST_PLAUSIBLE || ms > now.getTime() + 86_400_000 ? null : new Date(ms);
+}
+
 export function webSearchAdapter(options: {
   transport: Transport;
   apiKey: string;
   platform: SearchPlatform;
+  now?: () => Date;
 }): SourceAdapter {
   const { platform } = options;
+  const now = options.now ?? (() => new Date());
 
   return {
     id: SEARCH_ADAPTER_ID[platform],
@@ -132,10 +177,10 @@ export function webSearchAdapter(options: {
         body: {
           query: query.kind === 'hashtag' ? `#${query.value}` : query.value,
           include_domains: [DOMAIN[platform]],
+          // 최근 게시물 쪽으로 기울이는 용도. 실제 기간 필터는 parsePage에서 ID 날짜로 건다
           time_range: 'week',
-          // 게시일 추정값을 받고, 기간 밖이거나 게시일을 모르는 결과는 Tavily에서 먼저 뺀다
+          // 날짜가 오면 ID에서 계산한 날짜와 대조한다. filter_by_published_date는 결과를 비워서 쓰지 않는다
           include_published_date: true,
-          filter_by_published_date: true,
           max_results: MAX_RESULTS,
           search_depth: 'basic',
         },
@@ -156,16 +201,39 @@ export function webSearchAdapter(options: {
       }
       const items: SocialContent[] = [];
       const rejected: Rejection[] = [];
+      const skipped: Rejection[] = [];
+      const warnings: PageWarning[] = [];
+      const current = now();
+      const since = current.getTime() - SEARCH_WINDOW_DAYS * 86_400_000;
+      let mismatched = 0;
 
       for (const result of parsed.data.results) {
         const post = parsePostUrl(platform, result.url);
         if (!post) {
-          rejected.push({ reason: '게시물 URL이 아님', sample: truncateSample(result.url) });
+          skipped.push({ reason: '게시물 URL이 아님', sample: truncateSample(result.url) });
           continue;
         }
-        const published = result.published_date ? new Date(result.published_date) : null;
-        if (!published || Number.isNaN(published.getTime())) {
-          rejected.push({ reason: '게시일 없음', sample: truncateSample(result.url) });
+        const published = postedAtFromId(platform, post.id, current);
+        if (!published) {
+          rejected.push({
+            reason: 'ID에서 게시일을 계산하지 못함',
+            sample: truncateSample(result.url),
+          });
+          continue;
+        }
+        const reported = result.published_date ? new Date(result.published_date) : null;
+        if (
+          reported &&
+          !Number.isNaN(reported.getTime()) &&
+          Math.abs(reported.getTime() - published.getTime()) > DATE_MISMATCH_MS
+        ) {
+          mismatched += 1;
+        }
+        if (published.getTime() < since) {
+          skipped.push({
+            reason: `최근 ${SEARCH_WINDOW_DAYS}일보다 오래됨`,
+            sample: truncateSample(result.url),
+          });
           continue;
         }
         const text = [result.title, result.content].filter(Boolean).join('\n');
@@ -184,7 +252,13 @@ export function webSearchAdapter(options: {
           metrics: { views: null, likes: null, comments: null, shares: null },
         });
       }
-      return { items, rejected, warnings: [], nextCursor: null };
+      if (mismatched > 0) {
+        warnings.push({
+          kind: 'schema_drift',
+          message: `검색 결과 ${mismatched}건에서 ID로 계산한 게시일과 검색 API의 게시일이 2일 넘게 다릅니다 (ID 구조 변화 의심)`,
+        });
+      }
+      return { items, rejected, skipped, warnings, nextCursor: null };
     },
   };
 }
