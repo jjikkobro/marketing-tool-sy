@@ -149,6 +149,32 @@ describe('레드팀: 실행 대상 우회', () => {
     }
   });
 
+  it('실제 Claude 출력 회귀: 재실행 제안에 adapterId를 덧붙여도 같은 실행의 재실행은 중복으로 막는다', async () => {
+    const db = await seeded();
+    const retry = (extra: Partial<ProposalDraft>): ProposalDraft => ({
+      ...base,
+      kind: 'retry_run',
+      title: '부분 실패한 실행 #4 다시 수집',
+      rationale: '실행 #4가 503으로 부분 실패했습니다.',
+      adapterId: null,
+      queryKind: null,
+      queryValue: null,
+      runId: 4,
+      evidence: ['run:4'],
+      claims: [{ factId: 'run:4', field: 'lastHttpStatus', value: 503 }],
+      ...extra,
+    });
+    submitProposal(db, retry({}), 'recorded', now);
+    // 2026-11-24 실제 claude-opus-5-5 응답의 형태 (제안 #10)
+    const fromClaude = retry({
+      title: 'TikTok "fire noodle" 키워드 부분 실패 실행 재시도',
+      adapterId: 'tiktok-research',
+    });
+    expect(failed(db, fromClaude)).toContain('duplicate');
+    const { proposal } = submitProposal(db, retry({ adapterId: 'instagram-graph' }), 'test', now);
+    expect(proposal?.adapterId).toBeNull();
+  });
+
   it('사람이 거절한 대상은 같은 내용으로 다시 올라오지 않는다 (피드백)', async () => {
     const db = await seeded();
     const { proposal } = submitProposal(db, base, 'test', now);

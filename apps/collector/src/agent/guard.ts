@@ -56,11 +56,22 @@ export function normalizeQueryValue(kind: QueryKind, value: string): string {
 /** 키워드를 해시태그 형태로 바꾼다 ("fire noodle" → "firenoodle"). 키워드 근거를 해시태그 사실과 맞출 때 쓴다. */
 const asTag = (value: string) => value.replace(/\s+/g, '');
 
+/**
+ * 제안을 종류별 정체(identity)만 남긴 형태로 맞춘다.
+ * - 재실행(retry_run)의 대상은 실행 번호 하나다. 실제 Claude가 재실행 제안에 adapterId를 덧붙여
+ *   같은 실행 #4의 재실행이 "다른 제안"으로 판정되어 중복 검사를 통과한 일이 있었다 (docs/decisions/0002 §7).
+ *   실행 대상은 어차피 실행 기록에서 정해지므로, 덧붙인 필드는 버린다. 사람에게 엉뚱한 어댑터가 보이는 것도 막는다.
+ * - 새 수집(collect_query)에는 실행 번호가 없다.
+ */
 function normalizeDraft(draft: ProposalDraft): ProposalDraft {
+  const text = { title: nfkc(draft.title).trim(), rationale: nfkc(draft.rationale).trim() };
+  if (draft.kind === 'retry_run') {
+    return { ...draft, ...text, adapterId: null, queryKind: null, queryValue: null };
+  }
   return {
     ...draft,
-    title: nfkc(draft.title).trim(),
-    rationale: nfkc(draft.rationale).trim(),
+    ...text,
+    runId: draft.kind === 'collect_query' ? null : draft.runId,
     queryValue:
       draft.queryValue !== null && draft.queryKind !== null
         ? normalizeQueryValue(draft.queryKind, draft.queryValue)
