@@ -39,21 +39,6 @@ const FLOW = [
   },
 ] as const;
 
-const PROBLEMS = [
-  {
-    before: '플랫폼마다 검색하고, 결과를 시트에 옮기고, 다음 키워드를 감으로 고른다',
-    after: '수집·정리는 자동, 다음 키워드는 AI가 근거와 함께 제안 → 사람은 승인만',
-  },
-  {
-    before: '수집이 일부 실패해도 "성공"으로 보여 빈 데이터로 판단한다',
-    after: '실패·재시도·누락·플랫폼 구조 변화가 원인과 함께 기록된다',
-  },
-  {
-    before: 'AI가 그럴듯한 숫자를 지어내도 걸러낼 방법이 없다',
-    after: 'AI의 숫자는 SQL 값과 대조해, 틀리면 사람에게 가기 전에 차단한다',
-  },
-] as const;
-
 export function OverviewPage() {
   const snapshot = useQuery(snapshotQuery());
   const navigate = useNavigate();
@@ -167,7 +152,8 @@ export function OverviewPage() {
         <Card className="p-5">
           <p className="text-sm font-semibold">엔지니어·AI 도구 → MCP</p>
           <p className="mt-1 text-xs leading-relaxed text-ink-600">
-            웹이 아니어도 Claude Code 같은 AI 도구로 데이터를 조회하고 제안까지 할 수 있는 도구입니다.
+            웹이 아니어도 Claude Code 같은 AI 도구로 데이터를 조회하고 제안까지 할 수 있는
+            도구입니다.
           </p>
         </Card>
       </section>

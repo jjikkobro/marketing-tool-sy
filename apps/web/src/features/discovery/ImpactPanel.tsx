@@ -15,8 +15,6 @@ export function ImpactPanel({ snapshot }: { snapshot: Snapshot }) {
   ).length;
   const driftWarnings = errors.filter((error) => error.kind === 'schema_drift').length;
   const blocked = proposals.filter((p) => p.status === 'blocked').length;
-  const pending = proposals.filter((p) => p.status === 'pending').length;
-  const executed = proposals.filter((p) => p.status === 'executed').length;
   const seed = hashtags[0]?.hashtag;
   const firstRelated = seed ? related[seed]?.[0] : undefined;
 
