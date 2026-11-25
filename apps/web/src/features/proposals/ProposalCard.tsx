@@ -1,6 +1,6 @@
-import type { Proposal } from '@studio/collector/schema';
+import type { CollectionRun, Proposal } from '@studio/collector/schema';
 import { Check, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { Decision } from '../../api/snapshot';
 import { Badge } from '../../components/ui/Badge';
@@ -19,6 +19,10 @@ interface ProposalCardProps {
   pending: boolean;
   error: string | null;
   onDecide: (decision: Decision, note: string) => void;
+  /** 승인해 실행한 수집의 결과. 승인이 무엇을 가져왔는지 카드에서 바로 보여준다 */
+  run?: CollectionRun | null;
+  /** 카드 아래에 붙일 다음 단계 (예: 채택한 기획안 → 초안 만들기) */
+  next?: ReactNode;
 }
 
 export function ProposalCard({
@@ -29,6 +33,8 @@ export function ProposalCard({
   pending,
   error,
   onDecide,
+  run = null,
+  next,
 }: ProposalCardProps) {
   const status =
     proposal.kind === 'content_brief' && proposal.status === 'approved'
@@ -129,8 +135,9 @@ export function ProposalCard({
             onDecide={onDecide}
           />
         ) : (
-          <DecisionRecord proposal={proposal} />
+          <DecisionRecord proposal={proposal} run={run} />
         )}
+        {next}
       </footer>
     </Card>
   );
@@ -159,7 +166,7 @@ function Target({ proposal }: { proposal: Proposal }) {
   return null;
 }
 
-function DecisionRecord({ proposal }: { proposal: Proposal }) {
+function DecisionRecord({ proposal, run }: { proposal: Proposal; run: CollectionRun | null }) {
   if (proposal.status === 'blocked') {
     return (
       <p className="mt-1 text-burgundy">
@@ -176,13 +183,26 @@ function DecisionRecord({ proposal }: { proposal: Proposal }) {
         <span className="block text-burgundy">실행 오류: {proposal.executionError}</span>
       )}
       {proposal.resultRunId !== null && (
-        <>
-          {' '}
-          →{' '}
-          <Link to="/operations" className="font-semibold text-brand-700 hover:underline">
-            실행 #{proposal.resultRunId}
+        <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-square bg-ink-50 px-3 py-2 text-charcoal">
+          <span>
+            승인 즉시 실행 <span className="font-mono">#{proposal.resultRunId}</span>
+            {run && (
+              <>
+                {' '}
+                · 새로 {run.inserted}건 · 갱신 {run.updated}건
+              </>
+            )}
+          </span>
+          <Link
+            to={`/references?run=${proposal.resultRunId}`}
+            className="font-semibold text-brand-700 hover:underline"
+          >
+            레퍼런스 표에서 보기 →
           </Link>
-        </>
+          <Link to="/operations" className="text-ink-600 hover:text-brand-700">
+            실행 기록
+          </Link>
+        </span>
       )}
     </p>
   );
@@ -234,7 +254,11 @@ function DecisionForm({
               disabled={pending || noReviewer}
               onClick={() => onDecide('approve', note)}
             >
-              {proposal.kind === 'content_brief' ? '채택' : '승인하고 실행'}
+              {proposal.kind === 'content_brief'
+                ? '채택'
+                : pending
+                  ? '수집 실행 중…'
+                  : '승인하고 바로 수집'}
             </Button>
             <Button
               size="sm"

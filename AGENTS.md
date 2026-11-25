@@ -16,7 +16,7 @@
 - 실제 SNS를 스크래핑하지 않는다. 브라우저 자동화는 `apps/collector/fixtures/mock-feed/`만 대상으로 한다.
 - TikTok·Instagram 실제 데이터는 검색 API(`adapters/web-search.ts`, Tavily)로만 가져온다. 계정 로그인 수집은 만들지 않는다 (0006).
 - 실제로 실행해 보지 않은 코드를 "동작한다"고 문서에 쓰지 않는다.
-- **사람의 승인 없이 수집을 실행하는 경로를 만들지 않는다.** MCP에 승인·실행 도구를 추가하지 않는다. LLM이 만든 숫자를 검증 없이 화면이나 실행에 쓰지 않는다 (가드를 거친다).
+- **사람의 승인 없이 수집을 실행하거나 외부에 게시하는 경로를 만들지 않는다.** 초안 "발행"은 최종본 확정까지만 한다. MCP에 승인·실행 도구를 추가하지 않는다. LLM이 만든 숫자를 검증 없이 화면이나 실행에 쓰지 않는다 (가드를 거친다).
 - README와 화면의 효과 수치는 실제 실행 기록(스냅샷)에서 계산한 값만 쓴다. 지어낸 성과 수치는 금지한다.
 - YouTube 데이터는 해시태그·포맷 등 어떤 집계에도 넣지 않는다 (정책 III.E.2). 영상 단위로 YouTube가 준 값 그대로만 쓰고, 30일 삭제를 유지한다 (`core/youtube-policy.ts`).
 - API 키는 `apps/collector/.env`에만 둔다. `apps/web`의 `.env`나 `VITE_` 변수에 두지 않는다.
@@ -35,9 +35,11 @@ apps/collector   수집 에이전트 (Node 22, TS, better-sqlite3, zod, MCP SDK,
   src/demo/          문서 기반 픽스처와 데모 시나리오
   src/agent/         관찰 → LLM 제안 → 가드 → 사람의 결정 → 실행 (docs/decisions/0003)
                      availability.ts: 어떤 수집 경로를 쓸 수 있는지 (화면과 가드가 공유)
+                     prompts.ts: 고정 규칙(코드) + 지침(Admin에서 수정, config.ts에 버전 기록) (0007)
+                     drafts.ts: 채택 기획안 → 초안 → 숫자 검사 → 발행 확정 (실제 SNS 게시 없음)
   src/mcp.ts         MCP 서버 (조회·관찰·제안. 승인 도구 없음)
   src/live/          라이브 데모 서버: 웹 + API, 방문자별 샌드박스, Claude 호출 예산 (docs/decisions/0005)
-apps/web         개요·수집·운영·제안 검토 화면 (React 19, Vite, Tailwind v4)
+apps/web         워크플로(레퍼런스 수집 → 콘텐츠 기획 → 초안 발행) + Admin 화면 (React 19, Vite, Tailwind v4)
 Dockerfile, render.yaml  라이브 데모 배포
 docs/decisions/  결정 기록
 legacy/          원본 (git 제외)

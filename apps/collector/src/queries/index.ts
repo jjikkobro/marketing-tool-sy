@@ -28,6 +28,8 @@ interface ContentRow {
   comments: number | null;
   shares: number | null;
   matched_query: string;
+  first_seen_run_id: number;
+  last_seen_run_id: number;
   first_seen_at: string;
   last_seen_at: string;
 }
@@ -45,6 +47,8 @@ function toContent(row: ContentRow): StoredContent {
     publishedAt: row.published_at,
     metrics: { views: row.views, likes: row.likes, comments: row.comments, shares: row.shares },
     matchedQuery: row.matched_query,
+    firstSeenRunId: row.first_seen_run_id,
+    lastSeenRunId: row.last_seen_run_id,
     firstSeenAt: row.first_seen_at,
     lastSeenAt: row.last_seen_at,
   };

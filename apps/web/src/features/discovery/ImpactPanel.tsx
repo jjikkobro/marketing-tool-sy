@@ -28,7 +28,7 @@ export function ImpactPanel({ snapshot }: { snapshot: Snapshot }) {
         `콘텐츠 ${contents.length}건을 같은 형식으로 정리 (중복 ${sum((r) => r.duplicates)}건 자동 제거)`,
         `다음 수집 제안 ${proposals.length}건을 에이전트가 작성 → 사람은 승인만 (대기 ${pending} · 실행 ${executed})`,
       ],
-      link: { to: '/proposals', label: '제안 검토' },
+      link: { to: '/planning', label: '콘텐츠 기획' },
     },
     {
       title: '비효율 개선',
@@ -48,7 +48,7 @@ export function ImpactPanel({ snapshot }: { snapshot: Snapshot }) {
           : '함께 쓰인 해시태그로 다음 탐색 후보를 찾음',
         `LLM 제안 ${proposals.length}건 중 ${blocked}건은 근거·수치가 틀려 사람에게 가기 전에 차단`,
       ],
-      link: { to: '/discovery', label: '해시태그 보기' },
+      link: { to: '/references', label: '레퍼런스 보기' },
     },
   ];
 

@@ -30,6 +30,7 @@ import {
 import type { CollectionRun, Proposal } from './schema.ts';
 import { buildSnapshot } from './snapshot.ts';
 import { adapterFactoryFromEnv } from './agent/adapters-from-env.ts';
+import { activeGuidelines } from './agent/config.ts';
 import { claudePlanner, recordedPlanner } from './agent/planners.ts';
 import { acknowledge, approve, planAndGuard, reject, ReviewError } from './agent/review.ts';
 import { getProposal, listProposals } from './agent/store.ts';
@@ -163,7 +164,11 @@ async function runAgentCommand(
   values: { planner?: string; reviewer?: string; note?: string; every?: string },
 ) {
   const id = Number(idText);
-  const planner = () => (values.planner === 'claude' ? claudePlanner() : recordedPlanner());
+  // 웹 Admin에서 고친 기획 지침을 CLI 계획에도 같이 쓴다
+  const planner = () =>
+    values.planner === 'claude'
+      ? claudePlanner({ guidelines: activeGuidelines(db, 'brief_guidelines').value })
+      : recordedPlanner();
   const requireReviewer = () => {
     if (!values.reviewer?.trim())
       throw new ReviewError('--reviewer <이름>이 필요합니다 (누가 결정했는지 기록합니다)');

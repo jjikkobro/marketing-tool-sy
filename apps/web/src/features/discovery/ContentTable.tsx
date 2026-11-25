@@ -1,10 +1,16 @@
-import { platformSchema, type Platform, type StoredContent } from '@studio/collector/schema';
+import {
+  platformSchema,
+  type CollectionRun,
+  type Platform,
+  type StoredContent,
+} from '@studio/collector/schema';
 import { ExternalLink, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
 import { formatKst, formatNumber } from '../../lib/format';
-import { platformLabel, sourceLabel } from '../../lib/labels';
+import { platformLabel, sourceLabel, statusMeta } from '../../lib/labels';
 
 const fieldClass =
   'h-9 rounded-square border border-ink-300 bg-white px-3 text-sm text-charcoal hover:border-ink-400';
@@ -20,9 +26,21 @@ interface ContentTableProps {
   hashtag: string | null;
   /** 녹화 데이터면 공식 API·브라우저 행의 URL이 실제로 존재하지 않으므로 링크를 걸지 않는다 */
   recorded: boolean;
+  /** 승인한 수집 실행. 있으면 그 실행이 가져온 콘텐츠만 보여주고 새로 들어온 것을 표시한다 */
+  runId?: number | null;
+  /** runId의 실행 기록 (결과가 0건일 때 이유를 보여준다) */
+  run?: CollectionRun | null;
+  onClearRun?: () => void;
 }
 
-export function ContentTable({ contents, hashtag, recorded }: ContentTableProps) {
+export function ContentTable({
+  contents,
+  hashtag,
+  recorded,
+  runId = null,
+  run = null,
+  onClearRun,
+}: ContentTableProps) {
   const [platform, setPlatform] = useState<Platform | 'all'>('all');
   const [keyword, setKeyword] = useState('');
 
@@ -30,14 +48,15 @@ export function ContentTable({ contents, hashtag, recorded }: ContentTableProps)
     const query = keyword.trim().toLowerCase();
     return contents.filter(
       (content) =>
+        (runId === null || content.lastSeenRunId === runId) &&
         (platform === 'all' || content.platform === platform) &&
         (hashtag === null || content.hashtags.includes(hashtag)) &&
         (query === '' || content.caption.toLowerCase().includes(query)),
     );
-  }, [contents, platform, hashtag, keyword]);
+  }, [contents, platform, hashtag, keyword, runId]);
 
   return (
-    <Card>
+    <Card id="reference-table" className="scroll-mt-6">
       <div className="flex flex-wrap items-center gap-2 border-b border-ink-200 px-6 py-3">
         <label className="sr-only" htmlFor="filter-platform">
           플랫폼
@@ -70,6 +89,16 @@ export function ContentTable({ contents, hashtag, recorded }: ContentTableProps)
           />
         </div>
         <span className="ml-auto text-xs text-ink-600" aria-live="polite">
+          {runId !== null && (
+            <button
+              type="button"
+              onClick={onClearRun}
+              className="mr-2 rounded-full bg-charcoal px-2.5 py-1 font-semibold text-white"
+              title="전체 콘텐츠 보기"
+            >
+              실행 #{runId}에서 가져온 콘텐츠 ✕
+            </button>
+          )}
           {hashtag && <span className="mr-2 font-semibold text-charcoal">#{hashtag}</span>}
           {rows.length}건
         </span>
@@ -96,6 +125,9 @@ export function ContentTable({ contents, hashtag, recorded }: ContentTableProps)
                   <div className="flex items-center gap-1.5">
                     <Badge tone="neutral">{platformLabel[content.platform]}</Badge>
                     <Badge tone="muted">{sourceLabel[content.source]}</Badge>
+                    {runId !== null && content.firstSeenRunId === runId && (
+                      <Badge tone="brand">새로 수집</Badge>
+                    )}
                     {content.creatorHandle && (
                       <span className="truncate text-xs text-ink-600">
                         @{content.creatorHandle}
@@ -130,7 +162,19 @@ export function ContentTable({ contents, hashtag, recorded }: ContentTableProps)
         </table>
         {rows.length === 0 && (
           <p className="px-6 py-12 text-center text-sm text-ink-600">
-            조건에 맞는 콘텐츠가 없습니다.
+            {run ? (
+              // 승인한 수집이 아무것도 가져오지 못한 경우: 빈 표 대신 실행 결과를 설명한다
+              <>
+                실행 #{run.id}({run.query.kind}:{run.query.value})은 {statusMeta[run.status].label}
+                했지만 저장할 새 콘텐츠가 없었습니다. 검색 결과 중 최근 게시물이 아니거나 게시물
+                페이지가 아닌 것은 거릅니다.{' '}
+                <Link to="/operations" className="font-semibold text-brand-700 hover:underline">
+                  실행 기록 보기
+                </Link>
+              </>
+            ) : (
+              '조건에 맞는 콘텐츠가 없습니다.'
+            )}
           </p>
         )}
       </div>

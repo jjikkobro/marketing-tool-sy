@@ -17,9 +17,23 @@ import { z } from 'zod';
 import { adapterFactoryFromEnv } from '../agent/adapters-from-env.ts';
 import { sourcesFromEnv } from '../agent/availability.ts';
 import { claudePlanner, recordedPlanner, type Planner } from '../agent/planners.ts';
+import { activeGuidelines, updateConfig } from '../agent/config.ts';
+import {
+  claudeDrafter,
+  createDraft,
+  discardDraft,
+  publishDraft,
+  templateDrafter,
+  type Drafter,
+} from '../agent/drafts.ts';
 import { acknowledge, approve, planAndGuard, reject, ReviewError } from '../agent/review.ts';
 import { rejectCrossSite } from '../review-security.ts';
-import type { LiveStatus, PlanResponse } from '../schema.ts';
+import {
+  configKeySchema,
+  type DraftResponse,
+  type LiveStatus,
+  type PlanResponse,
+} from '../schema.ts';
 import { buildSnapshot } from '../snapshot.ts';
 import { ClaudeBudget } from './budget.ts';
 import { buildSeed } from './seed.ts';
@@ -41,7 +55,8 @@ const COOKIE = 'sc_sid';
 
 const budget = new ClaudeBudget({
   dailyLimit: Number(env.CLAUDE_DAILY_LIMIT ?? 100),
-  perSessionLimit: Number(env.CLAUDE_PER_SESSION_LIMIT ?? 3),
+  // 방문자 한 명이 기획 제안과 초안을 몇 번 받아볼 수 있도록 (계획 + 초안 = 2회가 한 바퀴)
+  perSessionLimit: Number(env.CLAUDE_PER_SESSION_LIMIT ?? 6),
   maxConcurrent: Number(env.CLAUDE_MAX_CONCURRENT ?? 2),
 });
 
@@ -55,6 +70,9 @@ const decisionSchema = z.object({
 });
 
 const DECISION_ROUTE = /^\/api\/proposals\/(\d+)\/(approve|reject|ack)$/;
+const DRAFT_CREATE_ROUTE = /^\/api\/briefs\/(\d+)\/draft$/;
+const DRAFT_DECISION_ROUTE = /^\/api\/drafts\/(\d+)\/(publish|discard)$/;
+const CONFIG_ROUTE = /^\/api\/config\/([a-z_]+)$/;
 const MAX_BODY_BYTES = 10_000;
 
 const MIME: Record<string, string> = {
@@ -155,7 +173,11 @@ async function plan(session: Session): Promise<PlanResponse> {
     if (decision.allowed) {
       acquired = true;
       session.plansUsed += 1;
-      planner = claudePlanner({ model: CLAUDE_MODEL, effort: CLAUDE_EFFORT });
+      planner = claudePlanner({
+        model: CLAUDE_MODEL,
+        effort: CLAUDE_EFFORT,
+        guidelines: activeGuidelines(session.db, 'brief_guidelines').value,
+      });
     } else {
       fallbackReason = decision.reason;
     }
@@ -179,6 +201,48 @@ async function plan(session: Session): Promise<PlanResponse> {
       live: false,
       fallbackReason: `Claude 호출 실패: ${error instanceof Error ? error.message : String(error)}`,
       proposalIds: results.flatMap((r) => (r.proposal ? [r.proposal.id] : [])),
+      elapsedMs: Date.now() - started,
+    };
+  } finally {
+    if (acquired) budget.release();
+  }
+}
+
+/** 초안: 계획과 같은 예산을 쓴다. 예산 밖이면 템플릿 초안으로 대체하고 그 이유를 돌려준다. */
+async function draft(session: Session, proposalId: number): Promise<DraftResponse> {
+  const started = Date.now();
+  let drafter: Drafter = templateDrafter();
+  let fallbackReason: string | null = CLAUDE_ENABLED
+    ? null
+    : '서버에 Claude API 키가 설정되지 않았습니다';
+  let acquired = false;
+  if (CLAUDE_ENABLED) {
+    const decision = budget.acquire(session.plansUsed);
+    if (decision.allowed) {
+      acquired = true;
+      session.plansUsed += 1;
+      drafter = claudeDrafter({ model: CLAUDE_MODEL, effort: CLAUDE_EFFORT });
+    } else {
+      fallbackReason = decision.reason;
+    }
+  }
+  try {
+    const created = await createDraft(session.db, proposalId, drafter);
+    return {
+      draftId: created.id,
+      drafterId: drafter.id,
+      live: acquired,
+      fallbackReason,
+      elapsedMs: Date.now() - started,
+    };
+  } catch (error) {
+    if (!acquired || error instanceof ReviewError) throw error;
+    const created = await createDraft(session.db, proposalId, templateDrafter());
+    return {
+      draftId: created.id,
+      drafterId: 'template',
+      live: false,
+      fallbackReason: `Claude 호출 실패: ${error instanceof Error ? error.message : String(error)}`,
       elapsedMs: Date.now() - started,
     };
   } finally {
@@ -237,6 +301,29 @@ const server = createServer(async (request, response) => {
     if (url.pathname === '/api/session/reset') {
       sessions.reset(session);
       return send(response, 200, { ok: true });
+    }
+
+    const draftCreate = DRAFT_CREATE_ROUTE.exec(url.pathname);
+    if (draftCreate) return send(response, 200, await draft(session, Number(draftCreate[1])));
+
+    const draftDecision = DRAFT_DECISION_ROUTE.exec(url.pathname);
+    if (draftDecision) {
+      const id = Number(draftDecision[1]);
+      const body = await readJson(request);
+      return send(
+        response,
+        200,
+        draftDecision[2] === 'publish'
+          ? publishDraft(session.db, id, body)
+          : discardDraft(session.db, id, body),
+      );
+    }
+
+    const configMatch = CONFIG_ROUTE.exec(url.pathname);
+    if (configMatch) {
+      const key = configKeySchema.safeParse(configMatch[1]);
+      if (!key.success) return send(response, 404, { error: '없는 설정입니다' });
+      return send(response, 200, updateConfig(session.db, key.data, await readJson(request)));
     }
 
     const match = DECISION_ROUTE.exec(url.pathname);

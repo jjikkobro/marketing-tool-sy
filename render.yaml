@@ -24,6 +24,6 @@ services:
       - key: CLAUDE_DAILY_LIMIT
         value: '100'
       - key: CLAUDE_PER_SESSION_LIMIT
-        value: '3'
+        value: '6'
       - key: CLAUDE_MAX_CONCURRENT
         value: '2'

@@ -115,6 +115,9 @@ export type CollectionError = z.infer<typeof collectionErrorSchema>;
 export const storedContentSchema = socialContentSchema.extend({
   matchedQuery: z.string(),
   source: sourceKindSchema,
+  /** 처음·마지막으로 이 콘텐츠를 본 실행. 승인한 수집이 무엇을 새로 가져왔는지 화면에서 바로 보여주는 데 쓴다 */
+  firstSeenRunId: z.number().int(),
+  lastSeenRunId: z.number().int(),
   firstSeenAt: z.iso.datetime(),
   lastSeenAt: z.iso.datetime(),
 });
@@ -248,6 +251,80 @@ export const proposalSchema = proposalDraftSchema.extend({
 });
 export type Proposal = z.infer<typeof proposalSchema>;
 
+/* ── 콘텐츠 초안 (채택한 기획안 → 초안 → 발행) ─────────────────── */
+
+/** LLM이 쓰는 초안 본문. 숫자 규칙은 기획안 사양 칸과 같다 (가드가 검사) */
+export const draftBodySchema = z.object({
+  title: z.string().trim().min(1).max(80),
+  /** 장면별 대본. 한 줄에 한 장면 */
+  script: z.string().trim().min(1).max(1500),
+  caption: z.string().trim().min(1).max(600),
+  hashtags: z.array(z.string().trim().min(1).max(40)).max(10),
+});
+export type DraftBody = z.infer<typeof draftBodySchema>;
+
+export const draftCheckSchema = z.object({
+  check: z.enum(['schema', 'grounded_numbers', 'hashtags']),
+  passed: z.boolean(),
+  detail: z.string(),
+});
+export type DraftCheck = z.infer<typeof draftCheckSchema>;
+
+/**
+ * 초안 상태
+ * - blocked: 가드를 통과하지 못함. 발행할 수 없다
+ * - draft: 마케터가 고치고 발행을 결정할 차례
+ * - published: 마케터가 최종본으로 확정함 (실제 SNS 게시는 하지 않는다)
+ * - discarded: 마케터가 사유를 남기고 버림
+ */
+export const draftStatusSchema = z.enum(['blocked', 'draft', 'published', 'discarded']);
+export type DraftStatus = z.infer<typeof draftStatusSchema>;
+
+export const contentDraftSchema = draftBodySchema.extend({
+  id: z.number().int(),
+  /** 근거가 된 채택 기획안 */
+  proposalId: z.number().int(),
+  status: draftStatusSchema,
+  draftedBy: z.string(),
+  checks: z.array(draftCheckSchema),
+  createdAt: z.iso.datetime(),
+  /** 발행 전에 사람이 본문을 고쳤으면 그 사람 */
+  editedBy: z.string().nullable(),
+  reviewer: z.string().nullable(),
+  reviewNote: z.string().nullable(),
+  reviewedAt: z.iso.datetime().nullable(),
+});
+export type ContentDraft = z.infer<typeof contentDraftSchema>;
+
+export const draftResponseSchema = z.object({
+  draftId: z.number().int().nullable(),
+  drafterId: z.string(),
+  live: z.boolean(),
+  fallbackReason: z.string().nullable(),
+  elapsedMs: z.number().int(),
+});
+export type DraftResponse = z.infer<typeof draftResponseSchema>;
+
+/* ── 에이전트 설정 (Admin에서 수정하는 프롬프트 지침) ─────────────── */
+
+export const configKeySchema = z.enum(['brief_guidelines', 'draft_guidelines']);
+export type ConfigKey = z.infer<typeof configKeySchema>;
+
+export const agentConfigSchema = z.object({
+  key: configKeySchema,
+  /** 지금 계획자·초안 작성자에게 들어가는 지침 */
+  value: z.string(),
+  defaultValue: z.string(),
+  isDefault: z.boolean(),
+  /** 수정할 수 없는 안전 규칙. 지침은 이 규칙보다 우선하지 않는다 */
+  fixedRules: z.string(),
+  updatedBy: z.string().nullable(),
+  updatedAt: z.iso.datetime().nullable(),
+  /** 바뀐 횟수 (기본값으로 되돌린 것 포함) */
+  versions: z.number().int(),
+});
+export type AgentConfig = z.infer<typeof agentConfigSchema>;
+
 /** web이 읽는 데이터 (collector export 또는 serve가 만든다). */
 export const snapshotSchema = z.object({
   generatedAt: z.iso.datetime(),
@@ -265,6 +342,8 @@ export const snapshotSchema = z.object({
   /** 상위 해시태그별 관련 해시태그 (queries/relatedHashtags 결과). 웹에서 다시 계산하지 않는다. */
   related: z.record(z.string(), z.array(hashtagStatSchema)),
   proposals: z.array(proposalSchema),
+  drafts: z.array(contentDraftSchema).default([]),
+  config: z.array(agentConfigSchema).default([]),
   /** 포맷별 집계 (규칙 기반 분류, YouTube 제외) */
   formats: z.array(
     z.object({

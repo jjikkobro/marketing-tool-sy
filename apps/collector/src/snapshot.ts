@@ -1,3 +1,5 @@
+import { listConfig } from './agent/config.ts';
+import { listDrafts } from './agent/drafts.ts';
 import { listProposals } from './agent/store.ts';
 import type { Db } from './db/database.ts';
 import {
@@ -32,6 +34,8 @@ export function buildSnapshot(
         .map((tag) => [tag.hashtag, relatedHashtags(db, tag.hashtag, { limit: 8 })]),
     ),
     proposals: listProposals(db),
+    drafts: listDrafts(db),
+    config: listConfig(db),
     formats: formatStats(db),
   });
 }

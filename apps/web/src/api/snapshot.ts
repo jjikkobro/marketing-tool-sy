@@ -1,8 +1,16 @@
 import {
+  agentConfigSchema,
+  contentDraftSchema,
+  draftResponseSchema,
   liveStatusSchema,
   planResponseSchema,
   proposalSchema,
   snapshotSchema,
+  type AgentConfig,
+  type ConfigKey,
+  type ContentDraft,
+  type DraftBody,
+  type DraftResponse,
   type LiveStatus,
   type PlanResponse,
   type Proposal,
@@ -105,4 +113,34 @@ export function requestPlan(reviewToken: string): Promise<PlanResponse> {
 /** 내 샌드박스를 처음 상태로 되돌린다 */
 export function resetSandbox(reviewToken: string): Promise<{ ok: boolean }> {
   return post('session/reset', {}, reviewToken, z.object({ ok: z.boolean() }));
+}
+
+/** 채택한 기획안으로 초안을 만든다. 서버가 Claude를 부르거나, 예산 밖이면 템플릿 초안으로 대체한다. */
+export function requestDraft(briefId: number, reviewToken: string): Promise<DraftResponse> {
+  return post(`briefs/${briefId}/draft`, {}, reviewToken, draftResponseSchema);
+}
+
+export function publishDraft(
+  id: number,
+  body: { reviewer: string; note?: string; edits?: Partial<DraftBody> },
+  reviewToken: string,
+): Promise<ContentDraft> {
+  return post(`drafts/${id}/publish`, body, reviewToken, contentDraftSchema);
+}
+
+export function discardDraft(
+  id: number,
+  body: { reviewer: string; note: string },
+  reviewToken: string,
+): Promise<ContentDraft> {
+  return post(`drafts/${id}/discard`, body, reviewToken, contentDraftSchema);
+}
+
+/** Admin 지침 저장. value가 null이면 기본값으로 되돌린다 */
+export function saveConfig(
+  key: ConfigKey,
+  body: { reviewer: string; value: string | null },
+  reviewToken: string,
+): Promise<AgentConfig> {
+  return post(`config/${key}`, body, reviewToken, agentConfigSchema);
 }

@@ -16,6 +16,7 @@ import type { SourceAdapter } from '../adapters/types.ts';
 import { webSearchAdapter } from '../adapters/web-search.ts';
 import { youtubeDataAdapter } from '../adapters/youtube-data.ts';
 import { hasLiveCollection } from '../agent/availability.ts';
+import { activeGuidelines } from '../agent/config.ts';
 import { claudePlanner } from '../agent/planners.ts';
 import { planAndGuard } from '../agent/review.ts';
 import { openDatabase, type Db } from '../db/database.ts';
@@ -135,6 +136,7 @@ async function seedClaudePlan(db: Db, now: Date): Promise<boolean> {
       claudePlanner({
         model: process.env.CLAUDE_MODEL ?? 'claude-opus-5-5',
         effort: 'medium',
+        guidelines: activeGuidelines(db, 'brief_guidelines').value,
       }),
       now,
     );

@@ -10,28 +10,33 @@ import { ImpactPanel } from '../discovery/ImpactPanel';
 const FLOW = [
   {
     icon: Radar,
-    title: '1. 수집',
-    body: 'TikTok·Instagram에서 키워드·해시태그로 콘텐츠를 모읍니다. 실패·누락·중복은 이유와 함께 기록합니다.',
+    title: '1. 레퍼런스 수집',
+    body: 'TikTok·Instagram·YouTube에서 숏폼을 모읍니다. 에이전트가 다음 수집 대상을 제안하고, 승인하면 바로 수집됩니다.',
+    human: false,
   },
   {
     icon: Bot,
-    title: '2. AI 제안',
-    body: 'Claude가 수집 데이터를 읽고 "다음에 무엇을 수집할지"를 제안합니다. 근거는 데이터의 사실 ID로만 인용합니다.',
-  },
-  {
-    icon: ShieldCheck,
-    title: '3. 자동 검증',
-    body: '가드가 8가지를 검사합니다. AI가 쓴 숫자가 SQL 값과 다르거나, 근거와 실행 대상이 어긋나면 사람에게 보내지 않습니다.',
+    title: '2. AI 기획 + 자동 검증',
+    body: 'Claude가 수집 데이터의 포맷을 근거로 기획안을 씁니다. 가드가 근거와 숫자를 SQL 값과 대조해 틀리면 막습니다.',
+    human: false,
   },
   {
     icon: UserCheck,
-    title: '4. 사람의 승인',
-    body: '통과한 제안만 검토 대기열에 올라갑니다. 사람이 근거를 보고 승인해야 실행됩니다.',
+    title: '3. 마케터의 채택',
+    body: '통과한 기획안만 마케터에게 갑니다. 채택하거나 사유를 남기고 거절합니다. 거절 사유는 다음 제안에 반영됩니다.',
+    human: true,
+  },
+  {
+    icon: ShieldCheck,
+    title: '4. 초안 작성 + 검증',
+    body: '채택한 기획안으로 AI가 장면별 대본과 캡션을 씁니다. 데이터처럼 보이는 숫자는 다시 걸러냅니다.',
+    human: false,
   },
   {
     icon: Play,
-    title: '5. 실행·기록',
-    body: '승인하는 순간 한 번 더 검증한 뒤 수집을 실행하고, 누가 무엇을 근거로 승인했는지 남깁니다.',
+    title: '5. 발행 확정',
+    body: '마케터가 초안을 고쳐 최종본으로 확정합니다. 누가 무엇을 근거로 결정했는지 모두 기록됩니다.',
+    human: true,
   },
 ] as const;
 
@@ -75,12 +80,12 @@ export function OverviewPage() {
           합니다.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
-          <Button onClick={() => navigate('/proposals', { state: { autoPlan: canPlan } })}>
+          <Button onClick={() => navigate('/planning', { state: { autoPlan: canPlan } })}>
             <Bot aria-hidden className="size-4" />
             {canPlan ? 'AI 기획안 받아보기' : 'AI 기획안 보기'}
           </Button>
-          <Button variant="secondary" onClick={() => navigate('/discovery')}>
-            수집된 데이터 보기
+          <Button variant="secondary" onClick={() => navigate('/references')}>
+            수집한 레퍼런스 보기
           </Button>
         </div>
       </header>
@@ -90,8 +95,7 @@ export function OverviewPage() {
           어떻게 동작하나요
         </h2>
         <ol className="mt-4 grid gap-3 md:grid-cols-5">
-          {FLOW.map(({ icon: Icon, title, body }) => {
-            const human = title.includes('승인');
+          {FLOW.map(({ icon: Icon, title, body, human }) => {
             return (
               <li key={title}>
                 <Card className={`h-full p-4 ${human ? 'border-brand bg-brand-50' : ''}`}>
@@ -125,28 +129,28 @@ export function OverviewPage() {
           <ol className="mt-4 space-y-2">
             <TryStep
               n={1}
-              title="수집 결과 확인"
-              body="어떤 콘텐츠와 해시태그가 모였고, 무엇이 함께 쓰였는지 봅니다."
-              to="/discovery"
-              cta="수집 화면"
+              title="레퍼런스 수집"
+              body="모인 숏폼과 해시태그를 보고, 에이전트의 수집 제안을 승인하면 그 자리에서 수집되어 표에 들어옵니다."
+              to="/references"
+              cta="레퍼런스 수집"
             />
             <TryStep
               n={2}
-              title="AI에게 기획안 받기"
+              title="콘텐츠 기획"
               body={
                 canPlan
-                  ? 'Claude가 지금 이 데이터를 읽고 기획안과 수집 제안을 씁니다 (보통 20~40초). 검증기가 무엇을 통과시키고 무엇을 막는지 봅니다.'
-                  : 'AI 제안과 가드가 막은 이유를 봅니다.'
+                  ? 'Claude가 지금 이 데이터를 읽고 기획안을 씁니다 (보통 20~40초). 검증기가 무엇을 통과시키고 무엇을 막는지 보고, 마음에 드는 기획안을 채택합니다.'
+                  : 'AI 기획안과 가드가 막은 이유를 봅니다.'
               }
-              onClick={() => navigate('/proposals', { state: { autoPlan: canPlan } })}
+              onClick={() => navigate('/planning', { state: { autoPlan: canPlan } })}
               cta={canPlan ? 'AI 기획안 받기' : '기획안 보기'}
             />
             <TryStep
               n={3}
-              title="승인하고 실행 결과 보기"
-              body="통과한 제안 하나를 승인하면 실제 수집이 실행되고, 운영 모니터에 실행 기록이 생깁니다."
-              to="/operations"
-              cta="운영 모니터"
+              title="초안 발행"
+              body="채택한 기획안으로 AI가 대본·캡션 초안을 씁니다. 고쳐서 발행을 확정합니다."
+              to="/drafts"
+              cta="초안 발행"
             />
           </ol>
         </div>

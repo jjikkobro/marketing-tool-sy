@@ -140,6 +140,27 @@ export function extractNumbers(text: string): number[] {
   return scanNumbers(text).numbers;
 }
 
+/**
+ * 제작 사양 글(기획안 plan, 콘텐츠 초안)의 숫자 규칙: "데이터처럼 보이는 숫자"만 막는다.
+ * "3초", "장면 4개" 같은 제작 사양은 허용하고, 측정 단위가 붙은 수·단위 변환·한글 수·claims에 없는 큰 수는 막는다.
+ */
+export function specNumberProblems(
+  rawText: string,
+  allowed: ReadonlySet<number>,
+  where: string,
+): string[] {
+  const problems: string[] = [];
+  const scan = scanNumbers(rawText);
+  const text = nfkc(rawText).replace(WORD_HASHTAG, ' ');
+  if (scan.derived) problems.push(`${where}에 단위 변환·비율 표현: "${scan.derived}"`);
+  if (scan.koreanNumeral) problems.push(`${where}에 한글로 쓴 수: "${scan.koreanNumeral}"`);
+  const dataCount = DATA_COUNT.exec(text)?.[0];
+  if (dataCount) problems.push(`${where}에 데이터 수치처럼 보이는 숫자: "${dataCount}"`);
+  const large = [...new Set(scan.numbers.filter((n) => n >= 100 && !allowed.has(n)))];
+  if (large.length > 0) problems.push(`${where}에 claims에 없는 큰 숫자: ${large.join(', ')}`);
+  return problems;
+}
+
 /* ── 검증 ───────────────────────────────────────────────────────── */
 
 export function verifyProposal(
@@ -260,29 +281,13 @@ function checkGroundedNumbers(draft: ProposalDraft, facts: Map<string, Fact>): G
   //    데이터 주장이 아니다. 사양 단위를 하나씩 허용하던 방식은 실제 Claude 출력("꿀팁 1가지", "1인분")에서
   //    계속 새는 곳이 생겨, "데이터처럼 보이는 숫자만 막는다"로 원칙을 바꿨다 (0002 §8).
   if (draft.plan) {
-    const planScan = scanNumbers(
-      [
-        draft.plan.hook,
-        draft.plan.deliverable,
-        draft.plan.successCriteria,
-        draft.plan.brandRisk ?? '',
-      ].join(' '),
-    );
-    const planText = nfkc(
-      [
-        draft.plan.hook,
-        draft.plan.deliverable,
-        draft.plan.successCriteria,
-        draft.plan.brandRisk ?? '',
-      ].join(' '),
-    ).replace(WORD_HASHTAG, ' ');
-    if (planScan.derived) problems.push(`기획 사양에 단위 변환·비율 표현: "${planScan.derived}"`);
-    if (planScan.koreanNumeral)
-      problems.push(`기획 사양에 한글로 쓴 수: "${planScan.koreanNumeral}"`);
-    const dataCount = DATA_COUNT.exec(planText)?.[0];
-    if (dataCount) problems.push(`기획 사양에 데이터 수치처럼 보이는 숫자: "${dataCount}"`);
-    const large = [...new Set(planScan.numbers.filter((n) => n >= 100 && !allowed.has(n)))];
-    if (large.length > 0) problems.push(`기획 사양에 claims에 없는 큰 숫자: ${large.join(', ')}`);
+    const planText = [
+      draft.plan.hook,
+      draft.plan.deliverable,
+      draft.plan.successCriteria,
+      draft.plan.brandRisk ?? '',
+    ].join(' ');
+    problems.push(...specNumberProblems(planText, allowed, '기획 사양'));
   }
 
   const citedRuns = new Set(
