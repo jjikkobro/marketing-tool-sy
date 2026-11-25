@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Bot, ClipboardCheck, Play, Radar, ShieldCheck, UserCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { snapshotQuery } from '../../api/snapshot';
-import { LiveStatusCard } from '../../components/layout/LiveStatusCard';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { ImpactPanel } from '../discovery/ImpactPanel';
@@ -58,7 +57,6 @@ const PROBLEMS = [
 export function OverviewPage() {
   const snapshot = useQuery(snapshotQuery());
   const navigate = useNavigate();
-  const live = snapshot.data?.live ?? null;
   const canPlan = Boolean(snapshot.data?.reviewable);
 
   return (
@@ -113,11 +111,7 @@ export function OverviewPage() {
         </ol>
       </section>
 
-      <section
-        aria-labelledby="try-heading"
-        data-help="overview-try"
-        className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
-      >
+      <section aria-labelledby="try-heading" data-help="overview-try" className="grid gap-6">
         <div>
           <h2 id="try-heading" className="text-lg font-bold">
             1분 안에 직접 해보기
@@ -155,12 +149,6 @@ export function OverviewPage() {
             />
           </ol>
         </div>
-        <Card className="h-fit p-5">
-          <p className="text-sm font-semibold">지금 이 화면에서</p>
-          <div className="mt-3">
-            <LiveStatusCard live={live} />
-          </div>
-        </Card>
       </section>
 
       {snapshot.data && <ImpactPanel snapshot={snapshot.data.snapshot} />}
