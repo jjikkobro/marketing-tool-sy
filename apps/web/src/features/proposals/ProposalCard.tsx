@@ -1,5 +1,5 @@
 import type { CollectionRun, Proposal } from '@studio/collector/schema';
-import { Check, X } from 'lucide-react';
+import { Check, ExternalLink, X } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { Decision } from '../../api/snapshot';
@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { cn } from '../../lib/cn';
 import { formatKst } from '../../lib/format';
+import type { ReferenceLink } from '../workflow/referenceLinks';
 import { guardCheckLabel, proposalKindLabel, proposalStatusMeta } from './labels';
 
 interface ProposalCardProps {
@@ -23,6 +24,8 @@ interface ProposalCardProps {
   run?: CollectionRun | null;
   /** 카드 아래에 붙일 다음 단계 (예: 채택한 기획안 → 초안 만들기) */
   next?: ReactNode;
+  /** 근거로 인용한 레퍼런스의 원본 게시물 링크 (factId → 링크) */
+  referenceLinks?: ReadonlyMap<string, ReferenceLink>;
 }
 
 export function ProposalCard({
@@ -35,6 +38,7 @@ export function ProposalCard({
   onDecide,
   run = null,
   next,
+  referenceLinks,
 }: ProposalCardProps) {
   const status =
     proposal.kind === 'content_brief' && proposal.status === 'approved'
@@ -79,6 +83,7 @@ export function ProposalCard({
               </li>
             ))}
           </ul>
+          <ReferenceSources evidence={proposal.evidence} links={referenceLinks} />
           {proposal.claims.length > 0 && (
             <ul className="mt-2 space-y-1 text-xs">
               {proposal.claims.map((claim) => (
@@ -307,5 +312,50 @@ function PlanDetails({ plan }: { plan: NonNullable<Proposal['plan']> }) {
         </div>
       ))}
     </dl>
+  );
+}
+
+/**
+ * 근거로 인용한 레퍼런스의 원본 영상. 툴 안이 아니라 새 탭에서 플랫폼의 원본 게시물을 연다.
+ * 녹화(가상) 데이터는 실제 게시물이 없어 링크 대신 "가상 URL"로 표시한다.
+ */
+function ReferenceSources({
+  evidence,
+  links,
+}: {
+  evidence: string[];
+  links: ReadonlyMap<string, ReferenceLink> | undefined;
+}) {
+  const sources = evidence.flatMap((id) => {
+    const link = links?.get(id);
+    return link ? [{ id, ...link }] : [];
+  });
+  if (sources.length === 0) return null;
+  return (
+    <div className="mt-3">
+      <p className="text-xs font-semibold">원본 레퍼런스</p>
+      <ul className="mt-1.5 space-y-1">
+        {sources.map((source) => (
+          <li key={source.id} className="text-xs">
+            {source.real ? (
+              <a
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:underline"
+              >
+                {source.label} 원본 영상 보기
+                <ExternalLink aria-hidden className="size-3" />
+                <span className="sr-only">(새 탭)</span>
+              </a>
+            ) : (
+              <span className="text-ink-500" title="녹화된 가상 데이터라 실제 게시물이 없습니다">
+                {source.label} · 가상 URL (녹화 데이터)
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

@@ -291,17 +291,21 @@ function stripCitedIdentifiers(text: string, citedTexts: readonly string[]): str
 function checkGroundedNumbers(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck {
   const allowed = new Set(draft.claims.map((claim) => claim.value));
   const problems: string[] = [];
+  // 인용한 사실의 설명과 factId 자체. Claude가 "video:youtube:0hnvjre3ebg"처럼 factId를 문장에 쓰기도 한다 (0002 §12)
   const citedTexts = draft.evidence.flatMap((id) => {
     const fact = facts.get(id);
-    return fact ? [fact.description] : [];
+    return fact ? [fact.description, id] : [];
   });
 
   // 1) 제목·근거 문장: 숫자는 검증된 claims 값만 쓸 수 있다
+  // 근거로 인용한(그리고 DB에 있는) factId를 문장에 그대로 쓴 부분은 지운다.
+  // TikTok 영상 ID처럼 숫자로만 된 ID도 있어서 식별자 규칙과 별도로 문자열 통째로 지운다.
+  let prose = `${draft.title} ${draft.rationale}`;
+  for (const id of [...facts.keys()].sort((a, b) => b.length - a.length)) {
+    prose = prose.replaceAll(id, ' ');
+  }
   const scan = scanNumbers(
-    stripCitedIdentifiers(
-      stripVerifiedQuotes(`${draft.title} ${draft.rationale}`, citedTexts),
-      citedTexts,
-    ),
+    stripCitedIdentifiers(stripVerifiedQuotes(prose, citedTexts), citedTexts),
   );
   if (scan.derived) problems.push(`단위 변환·비율 표현은 쓸 수 없음: "${scan.derived}"`);
   if (scan.koreanNumeral) problems.push(`한글로 쓴 수는 검증할 수 없음: "${scan.koreanNumeral}"`);

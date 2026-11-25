@@ -36,10 +36,17 @@ const TABS: { id: BriefTab; label: string; match: (p: Proposal) => boolean }[] =
 export function PlanningPage() {
   const workspace = useWorkspace();
   const { snapshot, plan, reset } = workspace;
-  const [tab, setTab] = useState<BriefTab>('pending');
+  const location = useLocation();
+  // 레퍼런스로 만든 기획안이 모두 가드에 막혔으면 처음부터 차단 탭을 연다 (막힌 이유를 바로 보게)
+  const [tab, setTab] = useState<BriefTab>(() => {
+    const state = referenceBriefState.safeParse(location.state);
+    if (!state.success) return 'pending';
+    const ids = state.data.referenceBrief.proposalIds;
+    const made = snapshot.data?.snapshot.proposals.filter((p) => ids.includes(p.id)) ?? [];
+    return made.length > 0 && made.every((p) => p.status === 'blocked') ? 'blocked' : 'pending';
+  });
 
   // 개요 화면의 "AI에게 기획안 받아보기"로 들어오면 한 번 자동 실행한다
-  const location = useLocation();
   const navigate = useNavigate();
   const autoStarted = useRef(false);
   const autoPlan =

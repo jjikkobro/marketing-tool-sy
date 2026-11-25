@@ -82,6 +82,8 @@ describe('레퍼런스 기반 기획', () => {
     expect(failed(`${handle}의 게시물은 조회 ${digits}회입니다.`, evidence)).toContain(
       'grounded_numbers',
     );
+    // factId를 문장에 그대로 써도 ID 속 숫자는 데이터 주장이 아니다
+    expect(failed(`${ref}의 구성을 참고합니다.`, evidence)).toEqual([]);
     // 그 레퍼런스를 근거로 인용하지 않았으면 핸들도 검증할 수 없다
     expect(failed(`${handle}의 게시물 구성을 참고합니다.`, brief.evidence)).toContain(
       'grounded_numbers',

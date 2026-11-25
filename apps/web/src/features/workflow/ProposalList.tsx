@@ -1,6 +1,7 @@
 import type { CollectionRun, Proposal } from '@studio/collector/schema';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { ProposalCard } from '../proposals/ProposalCard';
+import { buildReferenceLinks } from './referenceLinks';
 import type { useWorkspace } from './useWorkspace';
 
 interface ProposalListProps {
@@ -27,6 +28,8 @@ export function ProposalList({
   freshIds = [],
 }: ProposalListProps) {
   const { snapshot, reviewer, decision, plan } = workspace;
+  const data = snapshot.data?.snapshot;
+  const referenceLinks = useMemo(() => (data ? buildReferenceLinks(data) : undefined), [data]);
   if (proposals.length === 0) {
     return (
       <p className="rounded-square border border-dashed border-ink-300 bg-white px-6 py-8 text-center text-sm text-ink-600">
@@ -60,6 +63,7 @@ export function ProposalList({
           }
           run={runs.find((run) => run.id === proposal.resultRunId) ?? null}
           next={next?.(proposal)}
+          referenceLinks={referenceLinks}
         />
       ))}
     </div>
