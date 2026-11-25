@@ -161,52 +161,15 @@ export function OverviewPage() {
           <p className="text-sm font-semibold">마케터 → 이 웹 화면</p>
           <p className="mt-1 text-xs leading-relaxed text-ink-600">
             포맷과 근거 콘텐츠를 보고, AI 기획안을 채택·거절합니다. 거절 사유는 다음 기획에
-            반영됩니다. 설치할 것이 없습니다.
+            반영됩니다.
           </p>
         </Card>
         <Card className="p-5">
           <p className="text-sm font-semibold">엔지니어·AI 도구 → MCP</p>
           <p className="mt-1 text-xs leading-relaxed text-ink-600">
-            Claude Code 같은 AI 도구가 같은 데이터를 조회하고 제안까지 할 수 있는 연결부입니다. 승인
-            도구는 없어서 결정은 항상 사람이 웹에서 합니다.
+            웹이 아니어도 Claude Code 같은 AI 도구로 데이터를 조회하고 제안까지 할 수 있는 도구입니다.
           </p>
         </Card>
-      </section>
-
-      <section aria-labelledby="problem-heading">
-        <h2 id="problem-heading" className="text-lg font-bold">
-          무엇이 달라지나요
-        </h2>
-        <div className="mt-4 overflow-hidden rounded-square border border-ink-200">
-          <table className="w-full text-sm">
-            <thead className="bg-ink-50 text-left text-xs text-ink-600">
-              <tr>
-                <th className="px-5 py-2.5 font-medium">지금까지</th>
-                <th className="px-5 py-2.5 font-medium">Social Collector</th>
-              </tr>
-            </thead>
-            <tbody>
-              {PROBLEMS.map((row) => (
-                <tr key={row.before} className="border-t border-ink-100 align-top">
-                  <td className="px-5 py-3 text-ink-600">{row.before}</td>
-                  <td className="px-5 py-3 font-medium">{row.after}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-3 text-xs text-ink-600">
-          설계 근거와 한계는{' '}
-          <a
-            className="font-semibold text-brand-700 hover:underline"
-            href="https://github.com/jjikkobro/marketing-tool-sy#readme"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            README
-          </a>
-          와 결정 기록(docs/decisions)에 있습니다.
-        </p>
       </section>
     </div>
   );

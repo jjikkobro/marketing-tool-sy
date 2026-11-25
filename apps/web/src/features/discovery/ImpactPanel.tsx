@@ -26,7 +26,7 @@ export function ImpactPanel({ snapshot }: { snapshot: Snapshot }) {
       lead: '키워드 검색 → 정리 → 다음 키워드 고르기를 자동화',
       items: [
         `콘텐츠 ${contents.length}건을 같은 형식으로 정리 (중복 ${sum((r) => r.duplicates)}건 자동 제거)`,
-        `다음 수집 제안 ${proposals.length}건을 에이전트가 작성 → 사람은 승인만 (대기 ${pending} · 실행 ${executed})`,
+        `다음 수집 제안 ${proposals.length}건을 에이전트가 작성 → 사람은 승인만`,
       ],
       link: { to: '/planning', label: '콘텐츠 기획' },
     },
@@ -34,7 +34,7 @@ export function ImpactPanel({ snapshot }: { snapshot: Snapshot }) {
       title: '비효율 개선',
       lead: '조용히 틀린 데이터로 판단하는 일을 없앰',
       items: [
-        `문제 있던 실행 ${brokenRuns}건 모두 원인과 함께 기록 · 재시도 ${sum((r) => r.retries)}회로 일시 오류 흡수`,
+        `문제 있던 실행 ${brokenRuns}건 모두 원인과 함께 기록`,
         `플랫폼 구조 변화 ${driftWarnings}건 감지 · 중복 수집과 쿼터 낭비는 가드가 사전 차단`,
       ],
       link: { to: '/operations', label: '운영 모니터' },
