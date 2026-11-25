@@ -36,7 +36,7 @@ export function AgentPage() {
         }
       />
 
-      <Card>
+      <Card data-help="mcp-connect">
         <CardHeader
           title="연결하기"
           description="저장소를 클론하고 npm run demo를 한 번 실행한 뒤, Claude Code에 MCP 서버로 등록합니다."
@@ -53,7 +53,7 @@ export function AgentPage() {
         </p>
       </Card>
 
-      <section aria-labelledby="tools-heading" className="space-y-3">
+      <section aria-labelledby="tools-heading" className="space-y-3" data-help="mcp-tools">
         <h2 id="tools-heading" className="text-base font-semibold">
           공개한 도구 {toolNames.length}개
         </h2>

@@ -42,7 +42,7 @@ export function SettingsPage() {
         actions={snapshot.data && <ReviewerField reviewable={snapshot.data.reviewable} />}
       />
 
-      <Card className="flex gap-3 border-charcoal p-5 text-sm">
+      <Card data-help="settings-notice" className="flex gap-3 border-charcoal p-5 text-sm">
         <ShieldCheck aria-hidden className="mt-0.5 size-5 shrink-0 text-positive" />
         <p>
           지침은 <strong>내 샌드박스에만</strong> 적용됩니다. 근거 인용·숫자 대조 같은 안전 규칙은
@@ -83,7 +83,7 @@ function ConfigEditor({ config, reviewable }: { config: AgentConfig; reviewable:
   const noReviewer = reviewer.trim() === '';
 
   return (
-    <Card className="p-6">
+    <Card className="p-6" data-help={`config-${config.key}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold">{meta[config.key].title}</h2>

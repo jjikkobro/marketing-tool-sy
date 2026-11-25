@@ -74,3 +74,27 @@
     @apply outline-2 outline-offset-2 outline-brand;
   }
 }
+
+/*
+ * 도움말에서 단계를 누르면 화면의 해당 위치를 잠시 강조한다 (components/help/HelpPanel.tsx).
+ * 넓은 면을 칠하지 않고 테두리와 번지는 그림자만 쓴다 (오렌지는 강조할 곳에만).
+ */
+@keyframes help-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-brand) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+.help-highlight {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 4px;
+  border-radius: var(--radius-square);
+  animation: help-pulse 1s ease-out 3;
+}
+
+[data-help] {
+  scroll-margin: 6rem;
+}

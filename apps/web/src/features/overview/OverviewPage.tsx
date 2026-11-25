@@ -63,7 +63,7 @@ export function OverviewPage() {
 
   return (
     <div className="space-y-10">
-      <header>
+      <header data-help="overview-hero">
         <p className="font-display text-xs font-semibold tracking-[0.16em] text-brand-700 uppercase">
           Social Collector
         </p>
@@ -90,7 +90,7 @@ export function OverviewPage() {
         </div>
       </header>
 
-      <section aria-labelledby="flow-heading">
+      <section aria-labelledby="flow-heading" data-help="overview-flow">
         <h2 id="flow-heading" className="text-lg font-bold">
           어떻게 동작하나요
         </h2>
@@ -115,6 +115,7 @@ export function OverviewPage() {
 
       <section
         aria-labelledby="try-heading"
+        data-help="overview-try"
         className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
       >
         <div>

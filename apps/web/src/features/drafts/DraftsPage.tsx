@@ -100,7 +100,11 @@ export function DraftsPage() {
         <ErrorMessage error={snapshot.error} />
       ) : (
         <>
-          <section aria-labelledby="adopted-briefs" className="space-y-3">
+          <section
+            aria-labelledby="adopted-briefs"
+            className="space-y-3"
+            data-help="adopted-briefs"
+          >
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 id="adopted-briefs" className="text-base font-semibold">
@@ -189,6 +193,7 @@ export function DraftsPage() {
             <div
               role="tablist"
               aria-label="초안 상태"
+              data-help="draft-tabs"
               className="flex gap-1 rounded-square border border-ink-200 bg-white px-5 py-3"
             >
               {TABS.map(({ id, label, match }) => (
@@ -209,33 +214,35 @@ export function DraftsPage() {
                 </button>
               ))}
             </div>
-            {drafts.filter((d) => current?.match(d) ?? true).length === 0 ? (
-              <p className="rounded-square border border-dashed border-ink-300 bg-white px-6 py-8 text-center text-sm text-ink-600">
-                해당하는 초안이 없습니다.
-              </p>
-            ) : (
-              drafts
-                .filter((d) => current?.match(d) ?? true)
-                .map((draft) => (
-                  <DraftCard
-                    key={`${draft.id}:${draft.status}`}
-                    draft={draft}
-                    brief={proposals.find((p) => p.id === draft.proposalId) ?? null}
-                    reviewable={data?.reviewable ?? false}
-                    reviewer={reviewer}
-                    pending={decide.isPending && decide.variables.id === draft.id}
-                    error={
-                      decide.isError && decide.variables.id === draft.id
-                        ? decide.error.message
-                        : null
-                    }
-                    onPublish={({ note, edits }) =>
-                      decide.mutate({ id: draft.id, action: 'publish', note, edits })
-                    }
-                    onDiscard={(note) => decide.mutate({ id: draft.id, action: 'discard', note })}
-                  />
-                ))
-            )}
+            <div data-help="draft-list" className="space-y-3">
+              {drafts.filter((d) => current?.match(d) ?? true).length === 0 ? (
+                <p className="rounded-square border border-dashed border-ink-300 bg-white px-6 py-8 text-center text-sm text-ink-600">
+                  해당하는 초안이 없습니다.
+                </p>
+              ) : (
+                drafts
+                  .filter((d) => current?.match(d) ?? true)
+                  .map((draft) => (
+                    <DraftCard
+                      key={`${draft.id}:${draft.status}`}
+                      draft={draft}
+                      brief={proposals.find((p) => p.id === draft.proposalId) ?? null}
+                      reviewable={data?.reviewable ?? false}
+                      reviewer={reviewer}
+                      pending={decide.isPending && decide.variables.id === draft.id}
+                      error={
+                        decide.isError && decide.variables.id === draft.id
+                          ? decide.error.message
+                          : null
+                      }
+                      onPublish={({ note, edits }) =>
+                        decide.mutate({ id: draft.id, action: 'publish', note, edits })
+                      }
+                      onDiscard={(note) => decide.mutate({ id: draft.id, action: 'discard', note })}
+                    />
+                  ))
+              )}
+            </div>
           </section>
         </>
       )}

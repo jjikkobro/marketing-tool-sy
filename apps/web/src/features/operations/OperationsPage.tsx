@@ -31,12 +31,18 @@ export function OperationsPage() {
         <ErrorMessage error={snapshot.error} />
       ) : (
         <>
-          <section aria-label="어댑터 상태" className="grid gap-3 md:grid-cols-3">
+          <section
+            aria-label="어댑터 상태"
+            data-help="adapter-health"
+            className="grid gap-3 md:grid-cols-3"
+          >
             {snapshot.data.snapshot.health.map((health) => (
               <AdapterHealthCard key={health.adapterId} health={health} />
             ))}
           </section>
-          <RunTable runs={snapshot.data.snapshot.runs} errors={snapshot.data.snapshot.errors} />
+          <div data-help="run-table">
+            <RunTable runs={snapshot.data.snapshot.runs} errors={snapshot.data.snapshot.errors} />
+          </div>
         </>
       )}
     </div>

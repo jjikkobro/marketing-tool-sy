@@ -41,7 +41,10 @@ export function PlanPanel({
   const passed = fresh.filter((p) => p.status === 'pending').length;
 
   return (
-    <Card className="flex flex-wrap items-center gap-x-6 gap-y-3 border-charcoal p-5">
+    <Card
+      data-help="plan-panel"
+      className="flex flex-wrap items-center gap-x-6 gap-y-3 border-charcoal p-5"
+    >
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold">{title}</p>
         <p className="mt-0.5 text-xs text-ink-600">

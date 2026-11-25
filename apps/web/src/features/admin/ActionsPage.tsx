@@ -49,7 +49,10 @@ export function ActionsPage() {
         <ErrorMessage error={snapshot.error} />
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-square border border-ink-200 bg-white px-5 py-3">
+          <div
+            data-help="action-tabs"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-square border border-ink-200 bg-white px-5 py-3"
+          >
             <div role="tablist" aria-label="운영 조치 상태" className="flex gap-1">
               {TABS.map(({ id, label, match }) => (
                 <button
@@ -71,24 +74,26 @@ export function ActionsPage() {
             </div>
             <ReviewerField reviewable={snapshot.data.reviewable} />
           </div>
-          <ProposalList
-            proposals={proposals.filter((p) => current?.match(p) ?? true)}
-            workspace={workspace}
-            runs={snapshot.data.snapshot.runs}
-            empty={
-              tab === 'pending' ? (
-                <>
-                  확인할 운영 조치가 없습니다. 수집 상태는{' '}
-                  <Link to="/operations" className="font-semibold text-brand-700 hover:underline">
-                    수집 운영 모니터
-                  </Link>
-                  에서 볼 수 있습니다.
-                </>
-              ) : (
-                '해당하는 기록이 없습니다.'
-              )
-            }
-          />
+          <div data-help="action-list">
+            <ProposalList
+              proposals={proposals.filter((p) => current?.match(p) ?? true)}
+              workspace={workspace}
+              runs={snapshot.data.snapshot.runs}
+              empty={
+                tab === 'pending' ? (
+                  <>
+                    확인할 운영 조치가 없습니다. 수집 상태는{' '}
+                    <Link to="/operations" className="font-semibold text-brand-700 hover:underline">
+                      수집 운영 모니터
+                    </Link>
+                    에서 볼 수 있습니다.
+                  </>
+                ) : (
+                  '해당하는 기록이 없습니다.'
+                )
+              }
+            />
+          </div>
         </>
       )}
     </div>

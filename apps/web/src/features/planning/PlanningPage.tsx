@@ -116,7 +116,10 @@ export function PlanningPage() {
 
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <div className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-square border border-ink-200 bg-white px-5 py-3">
+              <div
+                data-help="brief-tabs"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-square border border-ink-200 bg-white px-5 py-3"
+              >
                 <div role="tablist" aria-label="기획안 상태" className="flex gap-1">
                   {TABS.map(({ id, label, match }) => (
                     <button
@@ -139,34 +142,36 @@ export function PlanningPage() {
                 <ReviewerField reviewable={snapshot.data.reviewable} />
               </div>
 
-              <ProposalList
-                proposals={briefs.filter((p) => current?.match(p) ?? true)}
-                workspace={workspace}
-                runs={snapshot.data.snapshot.runs}
-                freshIds={referenceResult?.referenceBrief.proposalIds ?? []}
-                onDecided={(decided) => {
-                  if (decided.status === 'approved') setTab('adopted');
-                }}
-                next={(brief) => {
-                  if (brief.status !== 'approved') return null;
-                  const count = drafts.filter((d) => d.proposalId === brief.id).length;
-                  return (
-                    <Link
-                      to={`/drafts?brief=${brief.id}`}
-                      className="mt-3 inline-flex items-center gap-1 rounded-full bg-charcoal px-4 py-2 text-xs font-semibold text-white hover:bg-black"
-                    >
-                      {count > 0 ? `초안 ${count}개 보기 →` : '3단계: 이 기획으로 초안 만들기 →'}
-                    </Link>
-                  );
-                }}
-                empty={
-                  tab === 'pending'
-                    ? '검토를 기다리는 기획안이 없습니다. 위의 “제안 받기”를 누르면 AI가 수집 데이터로 기획안을 씁니다.'
-                    : '해당하는 기획안이 없습니다.'
-                }
-              />
+              <div data-help="brief-list">
+                <ProposalList
+                  proposals={briefs.filter((p) => current?.match(p) ?? true)}
+                  workspace={workspace}
+                  runs={snapshot.data.snapshot.runs}
+                  freshIds={referenceResult?.referenceBrief.proposalIds ?? []}
+                  onDecided={(decided) => {
+                    if (decided.status === 'approved') setTab('adopted');
+                  }}
+                  next={(brief) => {
+                    if (brief.status !== 'approved') return null;
+                    const count = drafts.filter((d) => d.proposalId === brief.id).length;
+                    return (
+                      <Link
+                        to={`/drafts?brief=${brief.id}`}
+                        className="mt-3 inline-flex items-center gap-1 rounded-full bg-charcoal px-4 py-2 text-xs font-semibold text-white hover:bg-black"
+                      >
+                        {count > 0 ? `초안 ${count}개 보기 →` : '3단계: 이 기획으로 초안 만들기 →'}
+                      </Link>
+                    );
+                  }}
+                  empty={
+                    tab === 'pending'
+                      ? '검토를 기다리는 기획안이 없습니다. 위의 “제안 받기”를 누르면 AI가 수집 데이터로 기획안을 씁니다.'
+                      : '해당하는 기획안이 없습니다.'
+                  }
+                />
+              </div>
             </div>
-            <aside className="space-y-3">
+            <aside className="space-y-3" data-help="format-basis">
               <p className="text-xs text-ink-600">
                 기획안의 근거가 되는 포맷 집계입니다. AI는 이 값(format:*)을 인용해야 하고, 숫자는
                 여기 값과 같아야 통과합니다.

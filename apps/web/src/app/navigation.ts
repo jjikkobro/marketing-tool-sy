@@ -24,6 +24,8 @@ export interface NavItem {
 export interface NavGroup {
   label: string;
   items: NavItem[];
+  /** 도움말이 강조할 때 쓰는 이름 (data-help) */
+  helpId?: string;
   /** bottom이면 사이드바 맨 아래에 둔다 (Admin) */
   placement?: 'bottom';
 }
@@ -44,7 +46,7 @@ export const navigation: NavGroup[] = [
     label: '시작',
     items: [{ path: '/', label: '개요 · 직접 해보기', icon: Compass }],
   },
-  { label: '워크플로', items: workflowSteps },
+  { label: '워크플로', items: workflowSteps, helpId: 'nav-workflow' },
   {
     label: 'Admin',
     placement: 'bottom',

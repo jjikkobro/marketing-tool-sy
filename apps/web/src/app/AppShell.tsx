@@ -1,9 +1,12 @@
-import { Outlet } from 'react-router';
+import { Outlet, useLocation } from 'react-router';
+import { HelpPanel } from '../components/help/HelpPanel';
 import { GithubFab } from '../components/layout/GithubFab';
 import { PortfolioNotice } from '../components/layout/PortfolioNotice';
 import { Sidebar } from '../components/layout/Sidebar';
 
 export function AppShell() {
+  // 화면마다 도움말 상태(선택한 단계)를 새로 시작한다
+  const { pathname } = useLocation();
   return (
     <div className="flex h-screen flex-col">
       <PortfolioNotice />
@@ -14,6 +17,7 @@ export function AppShell() {
             <Outlet />
           </div>
         </main>
+        <HelpPanel key={pathname} />
       </div>
       <GithubFab />
     </div>

@@ -92,12 +92,14 @@ export function ReferencesPage() {
             onExecuted={(id) => setParams({ run: String(id) }, { replace: true })}
           />
 
-          <RunSummaryStrip
-            runs={snapshot.data.snapshot.runs}
-            errors={snapshot.data.snapshot.errors}
-          />
+          <div data-help="run-summary">
+            <RunSummaryStrip
+              runs={snapshot.data.snapshot.runs}
+              errors={snapshot.data.snapshot.errors}
+            />
+          </div>
           <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
-            <div className="space-y-6">
+            <div className="space-y-6" data-help="reference-filters">
               <FormatPanel formats={snapshot.data.snapshot.formats} />
               <HashtagPanel
                 hashtags={snapshot.data.snapshot.hashtags}
@@ -106,17 +108,19 @@ export function ReferencesPage() {
                 onSelect={setHashtag}
               />
             </div>
-            <ContentTable
-              contents={snapshot.data.snapshot.contents}
-              hashtag={hashtag}
-              recorded={snapshot.data.snapshot.dataMode === 'recorded'}
-              runId={runId}
-              run={snapshot.data.snapshot.runs.find((r) => r.id === runId) ?? null}
-              onClearRun={() => setParams({}, { replace: true })}
-              selected={selected}
-              onToggleSelect={snapshot.data.reviewable ? toggle : undefined}
-              selectionFull={selected.size >= MAX_REFERENCES}
-            />
+            <div data-help="reference-table" className="min-w-0">
+              <ContentTable
+                contents={snapshot.data.snapshot.contents}
+                hashtag={hashtag}
+                recorded={snapshot.data.snapshot.dataMode === 'recorded'}
+                runId={runId}
+                run={snapshot.data.snapshot.runs.find((r) => r.id === runId) ?? null}
+                onClearRun={() => setParams({}, { replace: true })}
+                selected={selected}
+                onToggleSelect={snapshot.data.reviewable ? toggle : undefined}
+                selectionFull={selected.size >= MAX_REFERENCES}
+              />
+            </div>
           </div>
 
           {snapshot.data.reviewable && (
@@ -156,6 +160,7 @@ function CollectProposals({
   return (
     <section
       aria-labelledby="collect-proposals"
+      data-help="collect-proposals"
       className="rounded-square border border-ink-200 bg-white"
     >
       <button
@@ -236,14 +241,17 @@ function SelectionBar({
 }) {
   if (count === 0) {
     return (
-      <p className="text-center text-xs text-ink-600">
+      <p className="text-center text-xs text-ink-600" data-help="reference-selection">
         표에서 레퍼런스를 골라(최대 {MAX_REFERENCES}개) 그 내용을 바탕으로 기획안을 만들 수
         있습니다.
       </p>
     );
   }
   return (
-    <div className="sticky bottom-4 z-10 flex flex-wrap items-center gap-3 rounded-square border border-charcoal bg-white px-5 py-3 shadow-lg">
+    <div
+      data-help="reference-selection"
+      className="sticky bottom-4 z-10 flex flex-wrap items-center gap-3 rounded-square border border-charcoal bg-white px-5 py-3 shadow-lg"
+    >
       <Lightbulb aria-hidden className="size-5 text-brand-700" />
       <p className="min-w-0 flex-1 text-sm">
         <strong>레퍼런스 {count}개</strong> 선택

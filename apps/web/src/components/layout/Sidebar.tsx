@@ -35,7 +35,7 @@ export function Sidebar() {
         </div>
       </nav>
 
-      <div className="border-t border-ink-200 px-6 py-4">
+      <div className="border-t border-ink-200 px-6 py-4" data-help="live-status">
         <LiveStatusCard live={live} compact />
       </div>
     </aside>
@@ -44,7 +44,7 @@ export function Sidebar() {
 
 function Group({ group, counts }: { group: NavGroup; counts: WorkCounts | null }) {
   return (
-    <div className="mt-5 first:mt-2">
+    <div className="mt-5 first:mt-2" data-help={group.helpId}>
       <p className="px-3 pb-1.5 text-[11px] font-semibold tracking-wider text-ink-500">
         {group.label}
       </p>
