@@ -11,31 +11,31 @@ const FLOW = [
   {
     icon: Radar,
     title: '1. 레퍼런스 수집',
-    body: 'TikTok·Instagram·YouTube에서 숏폼을 모읍니다. 에이전트가 다음 수집 대상을 제안하고, 승인하면 바로 수집됩니다.',
+    body: 'TikTok·Instagram·YouTube에서 숏폼 수집',
     human: false,
   },
   {
     icon: Bot,
     title: '2. AI 기획 + 자동 검증',
-    body: 'Claude가 수집 데이터의 포맷을 근거로 기획안을 씁니다. 가드가 근거와 숫자를 SQL 값과 대조해 틀리면 막습니다.',
+    body: 'AI가 수집 데이터의 포맷을 근거로 기획안 작성',
     human: false,
   },
   {
     icon: UserCheck,
     title: '3. 마케터의 채택',
-    body: '통과한 기획안만 마케터에게 갑니다. 채택하거나 사유를 남기고 거절합니다. 거절 사유는 다음 제안에 반영됩니다.',
+    body: '마케터는 기획안을 채택하거나 사유를 남기고 거절',
     human: true,
   },
   {
     icon: ShieldCheck,
     title: '4. 초안 작성 + 검증',
-    body: '채택한 기획안으로 AI가 장면별 대본과 캡션을 씁니다. 데이터처럼 보이는 숫자는 다시 걸러냅니다.',
+    body: '채택한 기획안으로 AI가 장면별 대본과 캡션 작성',
     human: false,
   },
   {
     icon: Play,
     title: '5. 발행 확정',
-    body: '마케터가 초안을 고쳐 최종본으로 확정합니다. 누가 무엇을 근거로 결정했는지 모두 기록됩니다.',
+    body: '마케터가 초안을 고쳐 최종본으로 확정',
     human: true,
   },
 ] as const;
@@ -70,12 +70,12 @@ export function OverviewPage() {
         <h1 className="mt-3 text-3xl leading-snug font-bold tracking-tight">
           지금 뜨는 숏폼 포맷을 찾아
           <br />
-          <span className="text-brand-700">근거가 검증된 기획안으로 만드는 에이전트</span>
+          <span className="text-brand-700">기획안으로 만드는 에이전트</span>
         </h1>
         <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-ink-600">
           TikTok·Instagram·YouTube의 숏폼을 모아{' '}
           <strong className="text-charcoal">어떤 포맷이 반응을 얻는지</strong> 보여주고, AI가 그
-          데이터로 콘텐츠 기획안을 씁니다. AI가 쓴 숫자는 데이터베이스 값과 대조해 틀리면 걸러내고,{' '}
+          데이터로 콘텐츠 기획안을 씁니다.{' '}
           <strong className="text-charcoal">무엇을 만들지는 마케터가 채택·거절로 결정</strong>
           합니다.
         </p>
