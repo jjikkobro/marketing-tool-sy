@@ -6,6 +6,7 @@ import { cn } from '../../lib/cn';
 
 const OPEN_KEY = 'social-collector:help-open';
 const HIGHLIGHT_MS = 3000;
+const DEMO_DELAY_MS = 150;
 
 /**
  * 화면 오른쪽 도움말. 단계를 누르면 그 영역(data-help)으로 스크롤하고 잠시 강조한다.
@@ -44,8 +45,23 @@ export function HelpPanel() {
 
   function show(step: HelpStep) {
     clearHighlight();
-    const element = document.querySelector(`[data-help="${step.target}"]`);
     setActive(step.title);
+    const demo = step.demo;
+    if (demo && !(demo.unless && document.querySelector(demo.unless))) {
+      const control = document.querySelector(demo.click);
+      if (control instanceof HTMLElement) {
+        control.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        control.click();
+        // 클릭으로 화면이 다시 그려진 뒤(예: 선택 바가 나타난 뒤) 강조한다
+        window.setTimeout(() => highlight(step), DEMO_DELAY_MS);
+        return;
+      }
+    }
+    highlight(step);
+  }
+
+  function highlight(step: HelpStep) {
+    const element = document.querySelector(`[data-help="${step.target}"]`);
     if (!element) {
       setMissing(step.title);
       return;
@@ -55,7 +71,8 @@ export function HelpPanel() {
       const toggleButton = element.querySelector('[aria-expanded="false"]');
       if (toggleButton instanceof HTMLElement) toggleButton.click();
     }
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // 데모로 다른 곳(예: 표의 첫 행)을 보여주는 중이면 화면을 옮기지 않는다
+    if (!step.demo) element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     element.classList.add('help-highlight');
     highlighted.current = {
       element,

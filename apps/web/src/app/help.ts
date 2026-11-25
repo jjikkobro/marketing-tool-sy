@@ -11,6 +11,11 @@ export interface HelpStep {
   target: string;
   /** 접힌 영역이면 펼친다 (aria-expanded="false"인 버튼을 누른다) */
   expand?: boolean;
+  /**
+   * 강조하기 전에 화면에서 실제로 해 보는 동작. click을 누르고(unless가 이미 있으면 건너뜀),
+   * 화면이 바뀐 뒤 target을 강조한다. 예: 첫 레퍼런스를 체크해 "기획안 만들기" 바를 띄운다
+   */
+  demo?: { click: string; unless?: string };
 }
 
 export interface PageHelp {
@@ -69,8 +74,12 @@ export const helpByPath: Record<string, PageHelp> = {
       },
       {
         title: '이 레퍼런스로 기획안 만들기',
-        body: '체크하면 아래에 버튼이 나타납니다. 결과는 2단계 콘텐츠 기획에서 이어집니다.',
+        body: '맨 위 레퍼런스를 체크해 보여드립니다. 화면 아래 바의 버튼을 누르면 2단계 콘텐츠 기획으로 이어집니다.',
         target: 'reference-selection',
+        demo: {
+          click: '[data-help="reference-table"] tbody tr:first-child input[type="checkbox"]',
+          unless: '[data-help="reference-table"] input[type="checkbox"]:checked',
+        },
       },
       {
         title: '더 모으기',
