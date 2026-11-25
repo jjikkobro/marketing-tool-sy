@@ -144,3 +144,11 @@ export function saveConfig(
 ): Promise<AgentConfig> {
   return post(`config/${key}`, body, reviewToken, agentConfigSchema);
 }
+
+/** 레퍼런스 화면에서 고른 콘텐츠로 기획안을 받는다. 가드는 고른 레퍼런스를 인용했는지도 검사한다. */
+export function requestReferenceBrief(
+  references: string[],
+  reviewToken: string,
+): Promise<PlanResponse> {
+  return post('references/brief', { references }, reviewToken, planResponseSchema);
+}

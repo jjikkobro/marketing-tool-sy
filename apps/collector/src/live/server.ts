@@ -26,10 +26,12 @@ import {
   templateDrafter,
   type Drafter,
 } from '../agent/drafts.ts';
+import { referenceTemplatePlanner } from '../agent/reference-brief.ts';
 import { acknowledge, approve, planAndGuard, reject, ReviewError } from '../agent/review.ts';
 import { rejectCrossSite } from '../review-security.ts';
 import {
   configKeySchema,
+  referenceBriefRequestSchema,
   type DraftResponse,
   type LiveStatus,
   type PlanResponse,
@@ -160,9 +162,12 @@ async function readJson(request: IncomingMessage): Promise<unknown> {
 }
 
 /** AI 계획: 예산 안이면 Claude를 실제로 호출하고, 아니면 녹화 응답으로 대체한 이유를 돌려준다. */
-async function plan(session: Session): Promise<PlanResponse> {
+async function plan(session: Session, focus: string[] = []): Promise<PlanResponse> {
   const started = Date.now();
-  let planner: Planner = recordedPlanner();
+  // 레퍼런스 기반 요청의 대체는 고른 레퍼런스로 만든 템플릿이다 (녹화 응답은 고른 레퍼런스와 무관하다)
+  const fallback = (): Planner =>
+    focus.length > 0 ? referenceTemplatePlanner(session.db) : recordedPlanner();
+  let planner: Planner = fallback();
   let fallbackReason: string | null = CLAUDE_ENABLED
     ? null
     : '서버에 Claude API 키가 설정되지 않았습니다';
@@ -184,7 +189,7 @@ async function plan(session: Session): Promise<PlanResponse> {
   }
 
   try {
-    const results = await planAndGuard(session.db, planner);
+    const results = await planAndGuard(session.db, planner, new Date(), { focus });
     return {
       plannerId: planner.id,
       live: acquired,
@@ -193,11 +198,12 @@ async function plan(session: Session): Promise<PlanResponse> {
       elapsedMs: Date.now() - started,
     };
   } catch (error) {
-    if (!acquired) throw error;
-    // Claude 호출이 실패하면 녹화 응답으로 대체하되, 실패했다는 사실을 숨기지 않는다
-    const results = await planAndGuard(session.db, recordedPlanner());
+    if (!acquired || error instanceof ReviewError) throw error;
+    // Claude 호출이 실패하면 대체 계획자로 만들되, 실패했다는 사실을 숨기지 않는다
+    const substitute = fallback();
+    const results = await planAndGuard(session.db, substitute, new Date(), { focus });
     return {
-      plannerId: 'recorded:claude-opus-5-5',
+      plannerId: substitute.id,
       live: false,
       fallbackReason: `Claude 호출 실패: ${error instanceof Error ? error.message : String(error)}`,
       proposalIds: results.flatMap((r) => (r.proposal ? [r.proposal.id] : [])),
@@ -297,6 +303,13 @@ const server = createServer(async (request, response) => {
     if (blocked) return send(response, 403, { error: blocked });
 
     if (url.pathname === '/api/agent/plan') return send(response, 200, await plan(session));
+
+    if (url.pathname === '/api/references/brief') {
+      const parsed = referenceBriefRequestSchema.safeParse(await readJson(request));
+      if (!parsed.success)
+        return send(response, 400, { error: parsed.error.issues[0]?.message ?? '잘못된 요청' });
+      return send(response, 200, await plan(session, [...new Set(parsed.data.references)]));
+    }
 
     if (url.pathname === '/api/session/reset') {
       sessions.reset(session);

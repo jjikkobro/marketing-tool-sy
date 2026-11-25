@@ -9,8 +9,8 @@ import type { SourceAdapter } from '../adapters/types.ts';
 import type { Db } from '../db/database.ts';
 import { runCollection, type RunOptions } from '../pipeline/run-collection.ts';
 import type { CollectQuery, Proposal } from '../schema.ts';
-import { verifyProposal } from './guard.ts';
-import { buildObservation } from './observation.ts';
+import { verifyProposal, type GuardOptions } from './guard.ts';
+import { buildObservation, factById } from './observation.ts';
 import type { Planner } from './planners.ts';
 import { getProposal, insertProposal, StaleProposalError, updateProposal } from './store.ts';
 
@@ -25,9 +25,15 @@ export class ReviewError extends Error {
 }
 
 /** 제안 하나를 가드에 통과시켜 저장한다. MCP 도구와 계획 사이클이 같은 함수를 쓴다. */
-export function submitProposal(db: Db, raw: unknown, proposedBy: string, now: Date = new Date()) {
+export function submitProposal(
+  db: Db,
+  raw: unknown,
+  proposedBy: string,
+  now: Date = new Date(),
+  options: GuardOptions = {},
+) {
   const observation = buildObservation(db, now);
-  const result = verifyProposal(db, observation, raw, now);
+  const result = verifyProposal(db, observation, raw, now, options);
   if (!result.draft) return { proposal: null, checks: result.checks };
   const proposal = insertProposal(db, result.draft, {
     status: result.passed ? 'pending' : 'blocked',
@@ -38,9 +44,43 @@ export function submitProposal(db: Db, raw: unknown, proposedBy: string, now: Da
   return { proposal, checks: result.checks };
 }
 
-export async function planAndGuard(db: Db, planner: Planner, now: Date = new Date()) {
-  const drafts = await planner.propose(buildObservation(db, now));
-  return drafts.map((raw) => submitProposal(db, raw, planner.id, now));
+/**
+ * 계획 한 번. focus(마케터가 고른 레퍼런스)가 있으면:
+ * - 고른 레퍼런스의 사실을 관찰에 넣고, 계획자에게 그것을 근거로 기획안만 쓰라고 알린다
+ * - 기획안이 아닌 출력은 버린다 (마케터가 요청한 것은 기획이다)
+ * - 가드는 고른 레퍼런스 중 하나 이상을 근거로 인용했는지 검사한다
+ */
+export async function planAndGuard(
+  db: Db,
+  planner: Planner,
+  now: Date = new Date(),
+  options: { focus?: readonly string[] } = {},
+) {
+  const observation = buildObservation(db, now);
+  const focus = options.focus ?? [];
+  if (focus.length > 0) {
+    const known = new Set(observation.facts.map((fact) => fact.factId));
+    for (const id of focus) {
+      const fact = factById(db, id, now);
+      if (!fact) throw new ReviewError(`레퍼런스 ${id}를 찾을 수 없습니다`);
+      if (!known.has(id)) observation.facts.push(fact);
+    }
+    observation.focusReferences = [...focus];
+  }
+  const drafts = await planner.propose(observation);
+  const relevant =
+    focus.length > 0
+      ? drafts.filter(
+          (raw) =>
+            typeof raw === 'object' &&
+            raw !== null &&
+            'kind' in raw &&
+            raw.kind === 'content_brief',
+        )
+      : drafts;
+  return relevant.map((raw) =>
+    submitProposal(db, raw, planner.id, now, focus.length > 0 ? { requiredEvidence: focus } : {}),
+  );
 }
 
 function requireReviewer(reviewer: string): string {

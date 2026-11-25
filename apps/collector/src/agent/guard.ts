@@ -44,6 +44,8 @@ export interface GuardResult {
 export interface GuardOptions {
   /** 승인 시점 재검증에서 자기 자신을 중복으로 세지 않도록 뺀다 */
   excludeProposalId?: number;
+  /** 레퍼런스 기반 기획: 이 중 하나 이상을 근거로 인용해야 한다 (마케터가 고른 레퍼런스) */
+  requiredEvidence?: readonly string[];
 }
 
 /* ── 정규화 ─────────────────────────────────────────────────────── */
@@ -200,7 +202,7 @@ export function verifyProposal(
     checkEvidence(draft, facts),
     checkClaims(draft, facts),
     checkGroundedNumbers(draft, facts),
-    checkTarget(draft),
+    checkTarget(draft, options),
     checkCapability(db, draft),
     checkDuplicate(db, draft, now, options),
     checkQuota(db, draft, now),
@@ -262,6 +264,30 @@ function stripVerifiedQuotes(text: string, citedTexts: readonly string[]): strin
   });
 }
 
+/** 글자와 숫자가 섞인 식별자 (작성자 핸들 sj.1_17, 채널명 등) */
+const IDENTIFIER = /[\p{L}\p{N}._@-]{3,}/gu;
+
+/**
+ * 근거로 인용한 사실의 원문에 들어 있는 식별자는 숫자 검사에서 뺀다.
+ * 실제 Claude 출력에서 레퍼런스 작성자 핸들 "sj.1_17"의 1·17이 근거 없는 숫자로 차단됐다 (0002 §12).
+ * DB 원문에 있는 식별자 문자열 통째로만 빼므로, "조회 17"처럼 숫자만 떼어 쓰면 그대로 막힌다.
+ */
+function stripCitedIdentifiers(text: string, citedTexts: readonly string[]): string {
+  const identifiers = new Set(
+    citedTexts.flatMap((source) =>
+      [...source.matchAll(IDENTIFIER)]
+        .map((m) => m[0].replace(/^[._@-]+|[._@-]+$/g, ''))
+        .filter((token) => /\p{L}/u.test(token) && /\d/.test(token)),
+    ),
+  );
+  let result = text;
+  // 긴 것부터 지워야 "abc_12"가 "abc_123"의 일부만 지우지 않는다
+  for (const token of [...identifiers].sort((a, b) => b.length - a.length)) {
+    result = result.replaceAll(token, ' ');
+  }
+  return result;
+}
+
 function checkGroundedNumbers(draft: ProposalDraft, facts: Map<string, Fact>): GuardCheck {
   const allowed = new Set(draft.claims.map((claim) => claim.value));
   const problems: string[] = [];
@@ -271,7 +297,12 @@ function checkGroundedNumbers(draft: ProposalDraft, facts: Map<string, Fact>): G
   });
 
   // 1) 제목·근거 문장: 숫자는 검증된 claims 값만 쓸 수 있다
-  const scan = scanNumbers(stripVerifiedQuotes(`${draft.title} ${draft.rationale}`, citedTexts));
+  const scan = scanNumbers(
+    stripCitedIdentifiers(
+      stripVerifiedQuotes(`${draft.title} ${draft.rationale}`, citedTexts),
+      citedTexts,
+    ),
+  );
   if (scan.derived) problems.push(`단위 변환·비율 표현은 쓸 수 없음: "${scan.derived}"`);
   if (scan.koreanNumeral) problems.push(`한글로 쓴 수는 검증할 수 없음: "${scan.koreanNumeral}"`);
   const ungrounded = [...new Set(scan.numbers.filter((n) => !allowed.has(n)))];
@@ -307,7 +338,7 @@ function checkGroundedNumbers(draft: ProposalDraft, facts: Map<string, Fact>): G
 }
 
 /** 실행 대상이 근거와 맞는지. 제목은 "#recipe 수집"인데 실제 쿼리는 다른 키워드인 경우를 막는다. */
-function checkTarget(draft: ProposalDraft): GuardCheck {
+function checkTarget(draft: ProposalDraft, options: GuardOptions = {}): GuardCheck {
   const pass = (detail: string): GuardCheck => ({ check: 'target', passed: true, detail });
   const fail = (detail: string): GuardCheck => ({ check: 'target', passed: false, detail });
 
@@ -336,6 +367,10 @@ function checkTarget(draft: ProposalDraft): GuardCheck {
   }
   if (draft.kind === 'content_brief') {
     if (!draft.plan) return fail('기획안에는 plan(포맷·훅·산출물·성공 기준)이 있어야 합니다');
+    const required = options.requiredEvidence ?? [];
+    if (required.length > 0 && !required.some((id) => draft.evidence.includes(id))) {
+      return fail('마케터가 고른 레퍼런스를 근거로 인용하지 않았습니다');
+    }
     return draft.evidence.includes(`format:${draft.plan.format}`)
       ? pass(`기획 포맷 "${draft.plan.format}"이 근거에 있음`)
       : fail(

@@ -251,6 +251,23 @@ export const proposalSchema = proposalDraftSchema.extend({
 });
 export type Proposal = z.infer<typeof proposalSchema>;
 
+/**
+ * 레퍼런스(수집한 콘텐츠 하나)를 가리키는 factId. 화면에서 고른 레퍼런스를 기획 근거로 넘길 때 쓴다.
+ * YouTube는 정책상 영상 단위 사실(video:youtube:*)을 그대로 쓴다.
+ */
+export function referenceFactId(content: Pick<SocialContent, 'platform' | 'platformContentId'>) {
+  return content.platform === 'youtube'
+    ? `video:youtube:${content.platformContentId}`
+    : `content:${content.platform}:${content.platformContentId}`;
+}
+
+export const referenceBriefRequestSchema = z.object({
+  references: z
+    .array(z.string().regex(/^(content|video):[a-z]+:[\w.-]+$/, '레퍼런스 형식이 아닙니다'))
+    .min(1, '레퍼런스를 하나 이상 고르세요')
+    .max(5, '레퍼런스는 다섯 개까지 고를 수 있습니다'),
+});
+
 /* ── 콘텐츠 초안 (채택한 기획안 → 초안 → 발행) ─────────────────── */
 
 /** LLM이 쓰는 초안 본문. 숫자 규칙은 기획안 사양 칸과 같다 (가드가 검사) */

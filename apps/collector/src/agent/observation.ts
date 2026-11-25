@@ -5,7 +5,7 @@
  * 사람의 최근 결정(거절 사유 포함)도 함께 넘겨, 같은 제안을 반복하지 않게 한다 (피드백).
  */
 import type { Db } from '../db/database.ts';
-import { FORMAT_LABEL, isFormatId } from '../core/format.ts';
+import { classifyFormat, FORMAT_LABEL, isFormatId } from '../core/format.ts';
 import {
   adapterHealth,
   formatStats,
@@ -40,6 +40,11 @@ export interface Observation {
   recentDecisions: RecentDecision[];
   /** 이미 사람의 검토를 기다리는 제안. 같은 내용을 다시 내지 않도록 계획자에게 보여준다 */
   openProposals: OpenProposal[];
+  /**
+   * 마케터가 레퍼런스 화면에서 고른 콘텐츠(factId). 있으면 계획자는 이것을 근거로 기획안만 쓴다.
+   * 고른 레퍼런스의 사실은 facts에도 들어 있다.
+   */
+  focusReferences?: string[];
 }
 
 /** null 값은 사실에 넣지 않는다. "모름"을 숫자로 바꾸지 않기 위해서다. */
@@ -130,6 +135,36 @@ function youtubeVideoFact(db: Db, videoId: string): Fact | null {
 }
 
 /**
+ * 수집한 게시물 하나 (YouTube 제외. YouTube는 youtubeVideoFact).
+ * 마케터가 고른 레퍼런스를 기획 근거로 쓰기 위한 사실이다. 지표는 받은 값만 넣는다 (검색 API는 지표 없음).
+ */
+function contentFact(db: Db, platform: string, contentId: string): Fact | null {
+  const row = db
+    .prepare(
+      `SELECT caption, hashtags, creator_handle, source, views, likes, comments FROM content
+        WHERE platform = ? AND platform_content_id = ? AND platform <> 'youtube'`,
+    )
+    .get(platform, contentId) as
+    | {
+        caption: string;
+        hashtags: string;
+        creator_handle: string | null;
+        source: string;
+        views: number | null;
+        likes: number | null;
+        comments: number | null;
+      }
+    | undefined;
+  if (!row) return null;
+  const format = classifyFormat(row.caption, JSON.parse(row.hashtags) as string[]);
+  return {
+    factId: `content:${platform}:${contentId}`,
+    description: `${platform} 게시물 "${row.caption.slice(0, 120)}" (${row.creator_handle ?? '작성자 미상'}, 출처 ${row.source}, 규칙 분류 포맷 ${format})`,
+    values: defined({ views: row.views, likes: row.likes, comments: row.comments }),
+  };
+}
+
+/**
  * factId 하나를 DB에서 직접 계산한다. 관찰 목록은 "상위 N개"로 잘려 있어서,
  * 그 밖으로 밀려난 근거를 가드가 "없는 사실"로 오판하지 않도록 쓴다.
  */
@@ -169,6 +204,10 @@ export function factById(db: Db, factId: string, now: Date = new Date()): Fact |
   if (type === 'format') {
     const stat = formatStats(db).find((f) => f.format === key);
     return stat ? formatFact(stat) : null;
+  }
+  if (type === 'content' && key.includes(':')) {
+    const platform = key.slice(0, key.indexOf(':'));
+    return contentFact(db, platform, key.slice(platform.length + 1));
   }
   if (type === 'video' && key.startsWith('youtube:'))
     return youtubeVideoFact(db, key.slice('youtube:'.length));

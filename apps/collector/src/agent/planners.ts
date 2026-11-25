@@ -71,6 +71,20 @@ const plannerOutputSchema = z.object({
   ),
 });
 
+/**
+ * 레퍼런스 기반 기획 요청. 지시는 시스템 프롬프트가 아니라 user 메시지에 넣는다 (고정 규칙은 그대로 둔다).
+ */
+function focusInstruction(observation: Observation): string {
+  const focus = observation.focusReferences ?? [];
+  if (focus.length === 0) return '';
+  return `
+
+마케터가 레퍼런스를 골라 기획을 요청했다: ${JSON.stringify(focus)}
+- 이번에는 contentBriefs만 1~2개 내고 actions는 빈 배열로 둔다.
+- 각 기획안의 evidence에 고른 레퍼런스 중 하나 이상과, 그 레퍼런스의 포맷에 맞는 format:* 사실을 넣는다.
+- rationale에는 고른 레퍼런스에서 무엇을 가져왔는지(구성, 훅, 연출)를 쓴다. 레퍼런스를 그대로 베끼는 기획은 하지 않는다.`;
+}
+
 export function claudePlanner(
   options: {
     client?: Anthropic;
@@ -102,7 +116,7 @@ export function claudePlanner(
         messages: [
           {
             role: 'user',
-            content: `관찰 시각: ${observation.generatedAt}\n\nadapters:\n${JSON.stringify(availableAdapters())}\n\nfacts:\n${JSON.stringify(observation.facts)}\n\nrecentDecisions:\n${JSON.stringify(observation.recentDecisions)}\n\nopenProposals:\n${JSON.stringify(observation.openProposals)}`,
+            content: `관찰 시각: ${observation.generatedAt}${focusInstruction(observation)}\n\nadapters:\n${JSON.stringify(availableAdapters())}\n\nfacts:\n${JSON.stringify(observation.facts)}\n\nrecentDecisions:\n${JSON.stringify(observation.recentDecisions)}\n\nopenProposals:\n${JSON.stringify(observation.openProposals)}`,
           },
         ],
       });

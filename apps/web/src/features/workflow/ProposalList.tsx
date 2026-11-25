@@ -12,6 +12,8 @@ interface ProposalListProps {
   empty: ReactNode;
   /** 결정이 끝난 뒤 (예: 실행 결과로 표를 좁히기) */
   onDecided?: (proposal: Proposal) => void;
+  /** 다른 화면에서 방금 만든 제안 (예: 레퍼런스로 만든 기획안). 강조해 보여준다 */
+  freshIds?: readonly number[];
 }
 
 /** 제안 카드 목록. 어느 화면이든 결정(승인·거절·확인)은 같은 경로로 서버에 간다. */
@@ -22,6 +24,7 @@ export function ProposalList({
   next,
   empty,
   onDecided,
+  freshIds = [],
 }: ProposalListProps) {
   const { snapshot, reviewer, decision, plan } = workspace;
   if (proposals.length === 0) {
@@ -38,7 +41,10 @@ export function ProposalList({
           key={proposal.id}
           proposal={proposal}
           reviewable={snapshot.data?.reviewable ?? false}
-          fresh={plan.data?.proposalIds.includes(proposal.id) ?? false}
+          fresh={
+            (plan.data?.proposalIds.includes(proposal.id) ?? false) ||
+            freshIds.includes(proposal.id)
+          }
           reviewer={reviewer}
           pending={decision.isPending && decision.variables.id === proposal.id}
           error={

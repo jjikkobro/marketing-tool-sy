@@ -1,5 +1,6 @@
 import {
   platformSchema,
+  referenceFactId,
   type CollectionRun,
   type Platform,
   type StoredContent,
@@ -31,6 +32,11 @@ interface ContentTableProps {
   /** runId의 실행 기록 (결과가 0건일 때 이유를 보여준다) */
   run?: CollectionRun | null;
   onClearRun?: () => void;
+  /** 기획 근거로 고른 레퍼런스(factId). onToggleSelect가 있으면 고르기 칸을 보여준다 */
+  selected?: ReadonlySet<string>;
+  onToggleSelect?: (factId: string) => void;
+  /** 더 고를 수 없는지 (최대 개수) */
+  selectionFull?: boolean;
 }
 
 export function ContentTable({
@@ -40,6 +46,9 @@ export function ContentTable({
   runId = null,
   run = null,
   onClearRun,
+  selected,
+  onToggleSelect,
+  selectionFull = false,
 }: ContentTableProps) {
   const [platform, setPlatform] = useState<Platform | 'all'>('all');
   const [keyword, setKeyword] = useState('');
@@ -105,59 +114,82 @@ export function ContentTable({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
           <thead>
             <tr className="text-left text-xs text-ink-600">
+              {onToggleSelect && (
+                <th className="w-10 py-3 pl-6 font-medium">
+                  <span className="sr-only">기획 근거로 고르기</span>
+                </th>
+              )}
               <th className="px-6 py-3 font-medium">콘텐츠</th>
-              <th className="px-3 py-3 text-right font-medium">조회</th>
-              <th className="px-3 py-3 text-right font-medium">좋아요</th>
-              <th className="px-3 py-3 text-right font-medium">댓글</th>
+              <th className="w-24 px-3 py-3 text-right font-medium">조회</th>
+              <th className="w-20 px-3 py-3 text-right font-medium">좋아요</th>
+              <th className="w-16 px-3 py-3 text-right font-medium">댓글</th>
               <th className="w-28 px-6 py-3 font-medium">게시</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((content) => (
-              <tr
-                key={`${content.platform}:${content.platformContentId}`}
-                className="border-t border-ink-100 align-top hover:bg-ink-50"
-              >
-                <td className="px-6 py-3.5">
-                  <div className="flex items-center gap-1.5">
-                    <Badge tone="neutral">{platformLabel[content.platform]}</Badge>
-                    <Badge tone="muted">{sourceLabel[content.source]}</Badge>
-                    {runId !== null && content.firstSeenRunId === runId && (
-                      <Badge tone="brand">새로 수집</Badge>
-                    )}
-                    {content.creatorHandle && (
-                      <span className="truncate text-xs text-ink-600">
-                        @{content.creatorHandle}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1.5 line-clamp-2">{content.caption || '(캡션 없음)'}</p>
-                  {content.url && (
-                    // YouTube·검색 API 행은 실제 게시물이라 항상 원본으로 연결한다 (YouTube 정책 III.I.4: 링크를 제거하지 않는다).
-                    // 브라우저 행은 저장소 안의 가상 피드라 어느 모드에서도 실제 게시물이 없다.
-                    <SourceLink
-                      url={content.url}
-                      recorded={
-                        content.source === 'browser' ||
-                        (recorded &&
-                          content.platform !== 'youtube' &&
-                          content.source !== 'web-search')
-                      }
-                      youtube={content.platform === 'youtube'}
-                    />
+            {rows.map((content) => {
+              const factId = referenceFactId(content);
+              const checked = selected?.has(factId) ?? false;
+              return (
+                <tr
+                  key={`${content.platform}:${content.platformContentId}`}
+                  className={`border-t border-ink-100 align-top hover:bg-ink-50 ${checked ? 'bg-brand-50' : ''}`}
+                >
+                  {onToggleSelect && (
+                    <td className="py-4 pl-6">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={!checked && selectionFull}
+                        onChange={() => onToggleSelect(factId)}
+                        aria-label={`기획 근거로 고르기: ${content.caption.slice(0, 40)}`}
+                        className="size-4 accent-charcoal"
+                      />
+                    </td>
                   )}
-                </td>
-                <MetricCell value={content.metrics.views} />
-                <MetricCell value={content.metrics.likes} />
-                <MetricCell value={content.metrics.comments} />
-                <td className="px-6 py-3.5 text-xs text-ink-600 tabular-nums">
-                  {formatKst(content.publishedAt)}
-                </td>
-              </tr>
-            ))}
+                  <td className="px-6 py-3.5">
+                    <div className="flex items-center gap-1.5">
+                      <Badge tone="neutral">{platformLabel[content.platform]}</Badge>
+                      <Badge tone="muted">{sourceLabel[content.source]}</Badge>
+                      {runId !== null && content.firstSeenRunId === runId && (
+                        <Badge tone="brand">새로 수집</Badge>
+                      )}
+                      {content.creatorHandle && (
+                        <span className="truncate text-xs text-ink-600">
+                          @{content.creatorHandle}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1.5 line-clamp-2 break-words">
+                      {content.caption || '(캡션 없음)'}
+                    </p>
+                    {content.url && (
+                      // YouTube·검색 API 행은 실제 게시물이라 항상 원본으로 연결한다 (YouTube 정책 III.I.4: 링크를 제거하지 않는다).
+                      // 브라우저 행은 저장소 안의 가상 피드라 어느 모드에서도 실제 게시물이 없다.
+                      <SourceLink
+                        url={content.url}
+                        recorded={
+                          content.source === 'browser' ||
+                          (recorded &&
+                            content.platform !== 'youtube' &&
+                            content.source !== 'web-search')
+                        }
+                        youtube={content.platform === 'youtube'}
+                      />
+                    )}
+                  </td>
+                  <MetricCell value={content.metrics.views} />
+                  <MetricCell value={content.metrics.likes} />
+                  <MetricCell value={content.metrics.comments} />
+                  <td className="px-6 py-3.5 text-xs text-ink-600 tabular-nums">
+                    {formatKst(content.publishedAt)}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {rows.length === 0 && (

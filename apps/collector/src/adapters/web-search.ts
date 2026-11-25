@@ -152,6 +152,21 @@ export function postedAtFromId(platform: SearchPlatform, id: string, now: Date):
   return ms < EARLIEST_PLAUSIBLE || ms > now.getTime() + 86_400_000 ? null : new Date(ms);
 }
 
+/**
+ * 검색 결과의 본문(content)이 게시물 설명이 아니라 페이지 메뉴 글자인 경우가 있다
+ * (실제 TikTok 결과: "TikTok - Make Your Day … Log in … For You …"). 그럴 때는 제목을 캡션으로 쓴다.
+ * 레퍼런스 기반 기획에서 Claude가 "본문이 페이지 텍스트뿐"이라며 근거로 쓰지 못한 사례가 있었다 (0002 §12).
+ */
+const PAGE_CHROME =
+  /make your day|log in|sign up|for you\s+(explore|following)|terms\s*&\s*policies/i;
+
+export function pickCaption(title: string | undefined, content: string | undefined): string {
+  const body = content?.trim() ?? '';
+  const heading = title?.trim() ?? '';
+  if (body && !PAGE_CHROME.test(body)) return body;
+  return heading || body;
+}
+
 export function webSearchAdapter(options: {
   transport: Transport;
   apiKey: string;
@@ -242,7 +257,7 @@ export function webSearchAdapter(options: {
           platformContentId: post.id,
           url: post.url,
           creatorHandle: post.creator,
-          caption: (result.content?.trim() || result.title?.trim() || '').slice(0, CAPTION_MAX),
+          caption: pickCaption(result.title, result.content).slice(0, CAPTION_MAX),
           hashtags: [
             ...new Set([...text.matchAll(HASHTAG_PATTERN)].map((m) => (m[1] ?? '').toLowerCase())),
           ],

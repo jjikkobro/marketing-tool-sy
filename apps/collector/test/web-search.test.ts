@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   classifySearchError,
   parsePostUrl,
+  pickCaption,
   postedAtFromId,
   webSearchAdapter,
 } from '../src/adapters/web-search.ts';
@@ -132,6 +133,19 @@ describe('검색 API 어댑터', () => {
     );
     expect(page.items).toHaveLength(1);
     expect(page.warnings).toEqual([expect.objectContaining({ kind: 'schema_drift' })]);
+  });
+
+  it('본문이 페이지 메뉴 글자면 제목을 캡션으로 쓴다', () => {
+    expect(
+      pickCaption(
+        'Korean snacks haul #koreanfood',
+        '# TikTok - Make Your Day TikTok Log in TikTok Search For You Explore Following',
+      ),
+    ).toBe('Korean snacks haul #koreanfood');
+    expect(pickCaption('제목', '매운 라면에 치즈를 넣어 봤어요')).toBe(
+      '매운 라면에 치즈를 넣어 봤어요',
+    );
+    expect(pickCaption(undefined, 'Log in')).toBe('Log in');
   });
 
   it('Instagram 게시물·릴스 URL에서 단축 코드를 뽑고, 다른 도메인은 거부한다', () => {
